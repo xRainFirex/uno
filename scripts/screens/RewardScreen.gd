@@ -73,8 +73,6 @@ func _ready() -> void:
 		col.add_child(crow)
 		for id in charms:
 			var b := charm_button(id)
-			if compact:
-				b.custom_minimum_size.y = 180
 			b.pressed.connect(_on_charm_picked.bind(id, b))
 			crow.add_child(b)
 			_charm_buttons.append(b)
@@ -100,7 +98,7 @@ func _ready() -> void:
 static func charm_button(id: String) -> Button:
 	var def := Charms.get_def(id)
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(300, 190)
+	b.custom_minimum_size = Vector2(300, 170)
 	b.focus_mode = Control.FOCUS_NONE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	var inner := UIKit.vbox(6)
@@ -111,7 +109,7 @@ static func charm_button(id: String) -> Button:
 	inner.offset_bottom = -12
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(inner)
-	var icon := CharmIcon.new(id, 64)
+	var icon := CharmIcon.new(id, 56)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	inner.add_child(icon)
@@ -120,6 +118,11 @@ static func charm_button(id: String) -> Button:
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.custom_minimum_size.x = 260
 	inner.add_child(desc)
+	# Buttons don't grow with their children, so stretch the button to fit the wrapped description.
+	var fit := func():
+		b.custom_minimum_size.y = maxf(170.0, inner.get_combined_minimum_size().y + 28.0)
+	inner.minimum_size_changed.connect(fit)
+	fit.call()
 	return b
 
 func _on_card_picked(view: CardView) -> void:
