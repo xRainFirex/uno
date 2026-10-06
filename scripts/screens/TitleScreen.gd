@@ -39,7 +39,7 @@ func _ready() -> void:
 	logo.add_theme_constant_override("outline_size", 26)
 	logo.add_theme_color_override("font_outline_color", Color(0.25, 0.03, 0.05))
 	col.add_child(logo)
-	col.add_child(UIKit.label("A N   U N O   R O G U E L I K E", 24, UIKit.TEXT_MUTED, true, HORIZONTAL_ALIGNMENT_CENTER))
+	col.add_child(UIKit.label("A   C A R D   R O G U E L I K E", 24, UIKit.TEXT_MUTED, true, HORIZONTAL_ALIGNMENT_CENTER))
 	col.add_child(UIKit.spacer(0, 36))
 
 	var buttons := UIKit.vbox(14)
