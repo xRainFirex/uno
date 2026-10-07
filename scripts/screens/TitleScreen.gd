@@ -100,7 +100,8 @@ func _show_how_to_play() -> void:
 [b][color=#f5c542]Losing hurts[/color][/b]  Lose a battle and you take damage for every card left in your hand. Reach 0 HP and the run is over.
 [b][color=#f5c542]The run[/color][/b]  Choose your path through three acts: battles, elites, shops, campfires, treasure and strange events. Beat each act's boss to move on.
 [b][color=#f5c542]Build your deck[/color][/b]  Win new cards, buy [b]charms[/b] (passive powers), remove weak cards and [b]enchant[/b] cards (Gilded, Barbed, Healing).
-[b][color=#f5c542]New cards[/color][/b]  [b]Discard All[/b] dumps every card of its colour. [b]Wild Swap[/b] trades hands with your opponent."""
+[b][color=#f5c542]Trick cards[/color][/b]  [b]Discard All[/b], [b]Wild Swap[/b], dual-colour numbers, [b]Double Down (x2)[/b], [b]Freeze[/b], [b]Gift[/b], [b]Wild Chain[/b] and [b]Wild Mirror[/b]. Hover any card for its effect. Tougher opponents use them too!
+[b][color=#f5c542]Bust![/color][/b]  Anyone holding 25 cards loses the battle on the spot."""
 	col.add_child(rt)
 	var close := UIKit.button("GOT IT", "AccentButton", Vector2(220, 0))
 	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

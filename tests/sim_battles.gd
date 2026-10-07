@@ -21,9 +21,13 @@ func _initialize() -> void:
 		var deck := CardFactory.starter_deck()
 		for i in g % 8:
 			deck.append(CardFactory.reward_card(act))
+		# Make sure every wacky card gets exercised.
+		for i in 3:
+			deck.append(CardFactory.trick_card())
+		deck.append(CardFactory.wild(CardData.Type.WILD_SWAP))
 		var s := BattleState.new()
 		var charms: Array = all_charms.slice(0, g % all_charms.size())
-		s.setup(deck, CardFactory.enemy_deck(enemy.deck, act), charms, enemy.abilities, 7, enemy.hand)
+		s.setup(deck, CardFactory.enemy_deck(enemy.deck, act, enemy.kind), charms, enemy.abilities, 7, enemy.hand)
 		var expected := s.total_cards()
 		var turns := 0
 		while s.winner() < 0 and turns < MAX_TURNS:
@@ -38,7 +42,7 @@ func _initialize() -> void:
 				if drawn == null:
 					s.note_stuck()
 				elif s.can_play(drawn, side):
-					choice = {"card": drawn, "color": EnemyAI.best_color(s.hands[side], drawn)}
+					choice = {"card": drawn, "color": EnemyAI.color_for(s.hands[side], drawn)}
 			if not choice.is_empty():
 				s.play(side, choice.card, choice.color)
 				if randf() < 0.01:

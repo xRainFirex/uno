@@ -26,7 +26,21 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 
 ## Content
 
-- **New cards:** *Discard All* also discards every other card of its colour from your hand. *Wild Swap* trades hands with the opponent.
+- **Trick cards** (beyond normal UNO):
+
+  | Card | Effect |
+  | --- | --- |
+  | Discard All | Also discards every other card of its colour from your hand. |
+  | Wild Swap | Choose a colour, then trade hands with the opponent. |
+  | Dual-colour numbers | Count as both colours. You pick which one continues. |
+  | Double Down (x2) | The opponent draws as many cards as they hold (max 6). |
+  | Freeze | You take two extra turns. |
+  | Gift | Give 2 random cards from your hand to the opponent (you always keep at least 1). |
+  | Wild Chain | Choose a colour, then play again. |
+  | Wild Mirror | Copies the effect of the card it covers. |
+
+  From Act I, elites and bosses carry some trick cards (except Wild Swap and Discard All), and from Act II regular opponents do too. The count grows each act.
+- **Bust:** anyone holding 25 cards loses the battle immediately.
 - **Enchantments:** *Gilded* (+3 gold when played), *Barbed* (opponent draws 1) and *Healing* (+2 HP). You get these at campfires, from events, and sometimes on reward cards.
 - **15 charms:** passive powers such as *Prism*, *Seer's Eye*, *Spyglass*, *Phoenix Feather* and *Megaphone*.
 - **20 opponents** in three acts, each with an AI style ("random", "aggressive" or "smart"). Elites and bosses have rule-bending abilities: *Spiky*, *Lockdown*, *House Tax*, *Chroma Shift*, *Quick Start* and *Thorns*.

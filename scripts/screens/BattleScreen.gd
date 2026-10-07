@@ -32,6 +32,7 @@ var _status_dot: Panel
 var _log: RichTextLabel
 var _avatar: Avatar
 var _enemy_count_label: Label
+var _hand_count_label: Label
 var _dos_button: Button
 var _pass_button: Button
 var _catch_button: Button
@@ -53,7 +54,7 @@ func _ready() -> void:
 	state = BattleState.new()
 	var player_hand := 7 - (1 if RunState.has_charm("light_pack") else 0)
 	var enemy_hand: int = enemy.hand + (1 if RunState.has_charm("heavy_burden") else 0)
-	state.setup(RunState.deck, CardFactory.enemy_deck(enemy.deck, RunState.act), RunState.charms, enemy.abilities, player_hand, enemy_hand)
+	state.setup(RunState.deck, CardFactory.enemy_deck(enemy.deck, RunState.act, enemy.kind), RunState.charms, enemy.abilities, player_hand, enemy_hand)
 	_build_ui()
 	resized.connect(_layout_all)
 	_intro.call_deferred()
@@ -95,6 +96,9 @@ func _build_ui() -> void:
 		add_child(lbl)
 		_deck_labels[side] = lbl
 
+	_hand_count_label = UIKit.label("", 20, UIKit.TEXT_MUTED, true)
+	add_child(_hand_count_label)
+
 	_layer = Control.new()
 	_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -123,6 +127,9 @@ func _build_ui() -> void:
 		al.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		al.custom_minimum_size.x = 280
 		einfo.add_child(al)
+	var tricks := CardFactory.enemy_trick_count(RunState.act, enemy.kind)
+	if tricks > 0:
+		einfo.add_child(UIKit.label("Deck holds %d trick card%s" % [tricks, "" if tricks == 1 else "s"], 16, Color(0.75, 0.6, 1.0), true))
 	_enemy_count_label = UIKit.label("", 18, UIKit.TEXT, true)
 	einfo.add_child(_enemy_count_label)
 
@@ -278,6 +285,7 @@ func _layout_all() -> void:
 	_dos_button.position = Vector2(size.x - 250, size.y - 390)
 	_pass_button.position = Vector2(size.x - 250, size.y - 210)
 	_catch_button.position = Vector2(c.x + 260, _hand_y(E) + 30)
+	_hand_count_label.position = Vector2(40, size.y - 64)
 	for i in _pile_views.size():
 		var v := _pile_views[i]
 		v.target_center = c + v.get_meta("offset", Vector2.ZERO)
@@ -399,7 +407,10 @@ func _refresh_info() -> void:
 		var owner_name: String = "YOUR DECK" if side == P else "%s'S DECK" % enemy.name.to_upper()
 		_deck_labels[side].text = "%s  %d" % [owner_name, d] + ("   ·   DISCARD %d" % dis if dis > 0 else "")
 		_deck_views[side].visible = d > 0 or dis > 0
-	_enemy_count_label.text = "%d cards in hand" % state.hands[E].size()
+	_enemy_count_label.text = _count_text(state.hands[E].size(), "cards in hand")
+	_enemy_count_label.add_theme_color_override("font_color", _count_color(state.hands[E].size(), UIKit.TEXT))
+	_hand_count_label.text = _count_text(state.hands[P].size(), "CARDS IN HAND")
+	_hand_count_label.add_theme_color_override("font_color", _count_color(state.hands[P].size(), UIKit.TEXT_MUTED))
 	_ring.target_color = UIKit.card_color(state.active_color)
 	if _seer_view:
 		var top := state.peek_top_of_deck(P)
@@ -421,6 +432,16 @@ func _refresh_controls() -> void:
 	_dos_button.disabled = not dos_ready
 	_pass_button.visible = my_turn and _drawn_card != null
 
+# _count_text / _count_color
+# DESCRIPTION: Hand-size readouts that warn as a hand nears the Bust limit.
+func _count_text(n: int, suffix: String) -> String:
+	if n >= BattleState.BUST_LIMIT - 7:
+		return "%d %s  ·  BUST AT %d!" % [n, suffix, BattleState.BUST_LIMIT]
+	return "%d %s" % [n, suffix]
+
+func _count_color(n: int, normal: Color) -> Color:
+	return UIKit.DANGER if n >= BattleState.BUST_LIMIT - 7 else normal
+
 func _set_status(text: String, color: Color) -> void:
 	_status_label.text = text
 	(_status_dot.get_theme_stylebox("panel") as StyleBoxFlat).bg_color = color
@@ -432,7 +453,7 @@ func _log_line(text: String) -> void:
 	_log.append_text(text + "\n")
 
 func _card_bb(card: CardData) -> String:
-	var col := UIKit.card_color(card.effective_color() if card.is_wild() and card.chosen_color >= 0 else card.card_color)
+	var col := UIKit.card_color(card.effective_color() if (card.is_wild() or card.is_dual()) and card.chosen_color >= 0 else card.card_color)
 	if card.is_wild() and card.chosen_color < 0:
 		col = Color(0.85, 0.85, 0.95)
 	return "[color=#%s][b]%s[/b][/color]" % [col.lightened(0.15).to_html(false), card.title()]
@@ -550,6 +571,8 @@ func _try_play(v: CardView) -> void:
 	var color := -1
 	if card.is_wild():
 		color = await _pick_color()
+	elif card.is_dual():
+		color = await _pick_color(card.colors())
 	await _resolve_play(P, card, color)
 	_busy = false
 	_player_done.emit()
@@ -592,17 +615,21 @@ func _on_dos_pressed() -> void:
 	_log_line("[color=#f5c542][b]You called DOS![/b][/color]")
 	_refresh_controls()
 
-func _pick_color() -> int:
+# _pick_color
+# DESCRIPTION: Shows the colour picker. Dual-colour cards only offer their own two colours.
+func _pick_color(allowed: Array = [0, 1, 2, 3]) -> int:
 	_modal = true
 	_update_hover()
 	_refresh_controls()
 	var counts := [0, 0, 0, 0]
 	for c in state.hands[P]:
 		if not c.is_wild():
-			counts[c.card_color] += 1
+			for col in c.colors():
+				counts[col] += 1
 	for i in 4:
 		var b := _color_modal.find_child("Color%d" % i, true, false) as Button
 		b.text = "%s\n%d in hand" % [CardData.COLOR_NAMES[i].to_upper(), counts[i]]
+		b.visible = allowed.has(i)
 	_color_modal.visible = true
 	_color_modal.modulate.a = 0.0
 	create_tween().tween_property(_color_modal, "modulate:a", 1.0, 0.15)
@@ -708,7 +735,7 @@ func _enemy_turn() -> void:
 		_sync_hands()
 		await _wait(0.55)
 		if state.can_play(card, E):
-			choice = {"card": card, "color": EnemyAI.best_color(state.hands[E], card)}
+			choice = {"card": card, "color": EnemyAI.color_for(state.hands[E], card)}
 		else:
 			_log_line("%s drew a card." % enemy.name)
 			return
@@ -728,8 +755,10 @@ func _resolve_play(side: int, card: CardData, color: int) -> void:
 	Sfx.play("play")
 	var who: String = "You" if side == P else enemy.name
 	var line := "%s played %s" % [who, _card_bb(card)]
-	if card.is_wild():
+	if card.is_wild() or card.is_dual():
 		line += " → %s" % CardData.COLOR_NAMES[card.chosen_color]
+	if res.mirrored >= 0:
+		line += " (copying %s)" % CardData.TYPE_NAMES[res.mirrored]
 	_log_line(line + ".")
 	if side == P:
 		RunState.stats.cards_played += 1
@@ -759,6 +788,11 @@ func _resolve_play(side: int, card: CardData, color: int) -> void:
 	if res.swapped:
 		_log_line("[color=#f5c542]Hands swapped![/color]")
 		Sfx.play("power")
+	if not res.gifted.is_empty():
+		_log_line("%s gifted %d card%s." % [who, res.gifted.size(), "" if res.gifted.size() == 1 else "s"])
+		Sfx.play("power")
+	if res.extra_turns > 1:
+		_log_line("%s take%s %d extra turns." % [who, "" if side == P else "s", res.extra_turns])
 	if not res.draws.is_empty():
 		var victim := "You draw" if res.draw_target == P else "%s draws" % enemy.name
 		_log_line("%s %d." % [victim, res.draws.size()])
@@ -768,7 +802,7 @@ func _resolve_play(side: int, card: CardData, color: int) -> void:
 		else:
 			_avatar.hit()
 	_sync_hands()
-	if not res.draws.is_empty() or res.swapped or not res.discarded.is_empty():
+	if not res.draws.is_empty() or res.swapped or not res.discarded.is_empty() or not res.gifted.is_empty():
 		await _wait(0.55)
 	if state.hands[side].size() == 1 and not res.swapped:
 		await _dos_check(side)
@@ -848,11 +882,13 @@ func _finish(winner: int) -> void:
 	var button: Button
 	if won:
 		Sfx.play("win")
-		var leftover: int = state.hands[E].size()
+		var leftover: int = mini(state.hands[E].size(), 10)
+		var bust: bool = state.hands[E].size() >= BattleState.BUST_LIMIT
 		var gold: int = int(enemy.gold) + leftover * 2 + (10 if RunState.has_charm("lucky_coin") else 0)
 		RunState.gain_gold(gold)
 		col.add_child(UIKit.title("VICTORY", 84, UIKit.GOLD))
-		col.add_child(UIKit.label("You emptied your hand. %s was left holding %d card%s." % [enemy.name, leftover, "" if leftover == 1 else "s"], 20, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
+		var why := "%s went BUST holding %d cards!" % [enemy.name, state.hands[E].size()] if bust else "You emptied your hand. %s was left holding %d card%s." % [enemy.name, leftover, "" if leftover == 1 else "s"]
+		col.add_child(UIKit.label(why, 20, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
 		var gl := UIKit.hbox(10)
 		gl.alignment = BoxContainer.ALIGNMENT_CENTER
 		gl.add_child(Glyph.new("coin", UIKit.GOLD, 36))
@@ -870,7 +906,8 @@ func _finish(winner: int) -> void:
 		RunState.take_damage(dmg)
 		_shake(18.0)
 		col.add_child(UIKit.title("DEFEAT", 84, UIKit.DANGER))
-		col.add_child(UIKit.label("%s emptied their hand first. You were holding %d card%s." % [enemy.name, held, "" if held == 1 else "s"], 20, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
+		var lost_why := "You went BUST holding %d cards!" % held if held >= BattleState.BUST_LIMIT else "%s emptied their hand first. You were holding %d card%s." % [enemy.name, held, "" if held == 1 else "s"]
+		col.add_child(UIKit.label(lost_why, 20, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
 		var hl := UIKit.hbox(10)
 		hl.alignment = BoxContainer.ALIGNMENT_CENTER
 		hl.add_child(Glyph.new("heart", UIKit.DANGER, 36))

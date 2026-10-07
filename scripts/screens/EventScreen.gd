@@ -143,7 +143,7 @@ func _shrine() -> Dictionary:
 				RunState.add_charm(id)
 				Sfx.play("power")
 				return "The candles flicker. You receive %s: %s" % [Charms.get_def(id).name, Charms.get_def(id).desc]},
-			{"label": "Pray  (add a random Wild card to your deck)", "action": func():
+			{"label": "Pray  (add a random rare card to your deck)", "action": func():
 				var card := CardFactory.card_of_rarity(CardData.Rarity.RARE)
 				RunState.add_card(card)
 				Sfx.play("power")

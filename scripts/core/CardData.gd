@@ -7,12 +7,15 @@ class_name CardData
 extends Resource
 
 enum CardColor { RED, BLUE, GREEN, YELLOW, WILD }
-enum Type { NUMBER, SKIP, REVERSE, DRAW_TWO, WILD, WILD_DRAW_FOUR, DISCARD_ALL, WILD_SWAP }
+# New types are appended so existing values never shift.
+enum Type { NUMBER, SKIP, REVERSE, DRAW_TWO, WILD, WILD_DRAW_FOUR, DISCARD_ALL, WILD_SWAP, DOUBLE_DOWN, FREEZE, GIFT, WILD_CHAIN, WILD_MIRROR }
 enum Enchant { NONE, GILDED, BARBED, HEALING }
 enum Rarity { COMMON, UNCOMMON, RARE }
 
 const COLOR_NAMES := ["Red", "Blue", "Green", "Yellow", "Wild"]
-const TYPE_NAMES := ["Number", "Skip", "Reverse", "Draw Two", "Wild", "Wild Draw Four", "Discard All", "Wild Swap"]
+const TYPE_NAMES := ["Number", "Skip", "Reverse", "Draw Two", "Wild", "Wild Draw Four", "Discard All", "Wild Swap", "Double Down", "Freeze", "Gift", "Wild Chain", "Wild Mirror"]
+const DOUBLE_DOWN_CAP := 6
+const GIFT_AMOUNT := 2
 const ENCHANT_NAMES := ["", "Gilded", "Barbed", "Healing"]
 const ENCHANT_DESCRIPTIONS := [
 	"",
@@ -25,6 +28,8 @@ const ENCHANT_DESCRIPTIONS := [
 @export var type: Type = Type.NUMBER
 @export var value: int = -1
 @export var enchant: Enchant = Enchant.NONE
+# Dual-colour cards count as both card_color and second_color (-1 = single colour).
+@export var second_color: int = -1
 
 # Runtime-only state used during a battle. Never persisted to the run deck.
 var chosen_color: int = -1
@@ -41,10 +46,23 @@ func _init(p_color: CardColor = CardColor.RED, p_type: Type = Type.NUMBER, p_val
 # clone
 # DESCRIPTION: Returns a fresh copy without any battle state attached.
 func clone() -> CardData:
-	return CardData.new(card_color, type, value, enchant)
+	var c := CardData.new(card_color, type, value, enchant)
+	c.second_color = second_color
+	return c
 
 func is_wild() -> bool:
 	return card_color == CardColor.WILD
+
+func is_dual() -> bool:
+	return second_color >= 0 and not is_wild()
+
+# has_color
+# DESCRIPTION: True if this card counts as the given colour (either colour for dual cards).
+func has_color(color: int) -> bool:
+	return card_color == color or (is_dual() and second_color == color)
+
+func colors() -> Array:
+	return [card_color, second_color] if is_dual() else [card_color]
 
 func is_action() -> bool:
 	return type != Type.NUMBER
@@ -53,9 +71,11 @@ func is_draw_card() -> bool:
 	return type == Type.DRAW_TWO or type == Type.WILD_DRAW_FOUR
 
 # effective_color
-# DESCRIPTION: The colour this card counts as on the pile (the declared colour for wilds).
+# DESCRIPTION: The colour this card counts as on the pile (the declared colour for wilds and dual cards).
 func effective_color() -> int:
 	if is_wild():
+		return chosen_color
+	if is_dual() and chosen_color >= 0:
 		return chosen_color
 	return card_color
 
@@ -64,8 +84,8 @@ func effective_color() -> int:
 func rarity() -> Rarity:
 	match type:
 		Type.NUMBER:
-			return Rarity.COMMON
-		Type.SKIP, Type.REVERSE, Type.DRAW_TWO, Type.DISCARD_ALL:
+			return Rarity.UNCOMMON if is_dual() else Rarity.COMMON
+		Type.SKIP, Type.REVERSE, Type.DRAW_TWO, Type.DISCARD_ALL, Type.FREEZE, Type.GIFT:
 			return Rarity.UNCOMMON
 	return Rarity.RARE
 
@@ -82,6 +102,8 @@ func type_name() -> String:
 	return TYPE_NAMES[type]
 
 func color_name() -> String:
+	if is_dual():
+		return "%s/%s" % [COLOR_NAMES[card_color], COLOR_NAMES[second_color]]
 	return COLOR_NAMES[card_color]
 
 # title
@@ -104,7 +126,10 @@ func describe() -> String:
 	var text := ""
 	match type:
 		Type.NUMBER:
-			text = "Match by colour or number."
+			if is_dual():
+				text = "Counts as both colours. Choose which colour continues."
+			else:
+				text = "Match by colour or number."
 		Type.SKIP:
 			text = "The opponent loses their turn."
 		Type.REVERSE:
@@ -119,6 +144,16 @@ func describe() -> String:
 			text = "Also discard every other card of this colour in your hand."
 		Type.WILD_SWAP:
 			text = "Choose the colour, then swap hands with the opponent."
+		Type.DOUBLE_DOWN:
+			text = "The opponent draws as many cards as they hold (max %d)." % DOUBLE_DOWN_CAP
+		Type.FREEZE:
+			text = "The opponent is frozen: you take two extra turns."
+		Type.GIFT:
+			text = "Give %d random cards from your hand to the opponent (you always keep at least 1)." % GIFT_AMOUNT
+		Type.WILD_CHAIN:
+			text = "Choose the colour, then play again."
+		Type.WILD_MIRROR:
+			text = "Choose the colour and copy the effect of the card it covers."
 	if enchant != Enchant.NONE:
 		text += "\n" + ENCHANT_DESCRIPTIONS[enchant]
 	return text

@@ -10,6 +10,8 @@ extends RefCounted
 
 const PLAYER := 0
 const ENEMY := 1
+# Bust: holding this many cards loses the battle on the spot. Keeps wacky-card chaos from running forever.
+const BUST_LIMIT := 25
 
 var hands: Array = [[], []]
 var draw_piles: Array = [[], []]
@@ -17,7 +19,7 @@ var discards: Array = [[], []]
 var top_card: CardData
 var active_color: int = 0
 var current: int = PLAYER
-var extra_turn := false
+var bonus_turns := 0
 var turn_number: Array[int] = [0, 0]
 var charms: Array = []
 var abilities: Array = []
@@ -78,7 +80,7 @@ func can_play(card: CardData, side: int) -> bool:
 		if side == PLAYER and has_ability("lockdown") and turn_number[PLAYER] <= 3:
 			return false
 		return true
-	if card.card_color == active_color:
+	if card.has_color(active_color):
 		return true
 	if card.type == top_card.type:
 		if card.type == CardData.Type.NUMBER:
@@ -155,39 +157,55 @@ func _retire_top() -> void:
 # DESCRIPTION: Plays a card and resolves every effect. Returns a description of what happened for the UI.
 func play(side: int, card: CardData, chosen: int = -1) -> Dictionary:
 	var opp := 1 - side
+	var covered := top_card
 	hands[side].erase(card)
 	_retire_top()
 	top_card = card
 	if card.is_wild():
 		card.chosen_color = chosen if chosen >= 0 else CardFactory.random_color()
+	elif card.is_dual():
+		# Keep the requested colour if valid, else stay on the active colour if it matches, else the first colour.
+		if card.has_color(chosen):
+			card.chosen_color = chosen
+		elif card.has_color(active_color):
+			card.chosen_color = active_color
+		else:
+			card.chosen_color = card.card_color
 	active_color = card.effective_color()
 	stuck_in_row = 0
 
 	var res := {
-		"side": side, "card": card, "draw_target": opp, "draws": [], "discarded": [],
-		"extra_turn": false, "swapped": false, "heal": 0, "gold": 0, "hp_loss": 0,
-		"texts": [], "blocked": false,
+		"side": side, "card": card, "draw_target": opp, "draws": [], "discarded": [], "gifted": [],
+		"extra_turns": 0, "swapped": false, "heal": 0, "gold": 0, "hp_loss": 0,
+		"texts": [], "blocked": false, "mirrored": -1,
 	}
+	# Wild Mirror resolves as a copy of whatever card it covered.
+	var effect := card.type
+	if card.type == CardData.Type.WILD_MIRROR:
+		res.texts.append("MIRROR!")
+		if covered != null and covered.type != CardData.Type.WILD_MIRROR:
+			effect = covered.type
+			res.mirrored = effect
 	var penalty := 0
-	match card.type:
+	match effect:
 		CardData.Type.SKIP:
-			res.extra_turn = true
+			res.extra_turns = 1
 			res.texts.append("SKIP!")
 		CardData.Type.REVERSE:
-			res.extra_turn = true
+			res.extra_turns = 1
 			res.texts.append("REVERSE!")
 			if side == PLAYER and has_charm("mirror_shard"):
 				penalty += 1
 		CardData.Type.DRAW_TWO:
-			res.extra_turn = true
+			res.extra_turns = 1
 			penalty += 2
 			if side == ENEMY and has_ability("spiky"):
 				penalty += 1
 		CardData.Type.WILD_DRAW_FOUR:
-			res.extra_turn = true
+			res.extra_turns = 1
 			penalty += 4
 		CardData.Type.DISCARD_ALL:
-			var same: Array = hands[side].filter(func(c): return c.card_color == card.card_color)
+			var same: Array = hands[side].filter(func(c): return not c.is_wild() and c.has_color(active_color))
 			for c in same:
 				hands[side].erase(c)
 				discards[c.owner_side].append(c)
@@ -200,6 +218,23 @@ func play(side: int, card: CardData, chosen: int = -1) -> Dictionary:
 				hands[opp] = tmp
 				res.swapped = true
 				res.texts.append("SWAP!")
+		CardData.Type.DOUBLE_DOWN:
+			penalty += mini(hands[opp].size(), CardData.DOUBLE_DOWN_CAP)
+			res.texts.append("x2!")
+		CardData.Type.FREEZE:
+			res.extra_turns = 2
+			res.texts.append("FREEZE!")
+		CardData.Type.GIFT:
+			var amount := mini(CardData.GIFT_AMOUNT, hands[side].size() - 1)
+			for i in amount:
+				var c: CardData = hands[side].pick_random()
+				hands[side].erase(c)
+				hands[opp].append(c)
+				res.gifted.append(c)
+			res.texts.append("GIFT!")
+		CardData.Type.WILD_CHAIN:
+			res.extra_turns = 1
+			res.texts.append("CHAIN!")
 
 	if side == PLAYER:
 		if card.is_wild() and has_charm("prism"):
@@ -225,7 +260,7 @@ func play(side: int, card: CardData, chosen: int = -1) -> Dictionary:
 	if penalty > 0:
 		res.draws = draw_many(opp, penalty)
 		res.texts.append("+%d" % penalty)
-	extra_turn = res.extra_turn
+	bonus_turns += res.extra_turns
 	return res
 
 # penalize
@@ -236,19 +271,26 @@ func penalize(side: int, amount: int) -> Array:
 func note_stuck() -> void:
 	stuck_in_row += 1
 
+# end_turn
+# DESCRIPTION: Passes play to the other side unless the current side has bonus turns (Skip, Freeze, Chain...).
 func end_turn() -> void:
-	if extra_turn:
-		extra_turn = false
+	if bonus_turns > 0:
+		bonus_turns -= 1
 	else:
 		current = 1 - current
 
 # winner
-# DESCRIPTION: Returns the winning side, or -1 while the battle continues. A long stalemate goes to the smaller hand.
+# DESCRIPTION: Returns the winning side, or -1 while the battle continues. Holding BUST_LIMIT cards loses,
+#              and a long stalemate goes to the smaller hand.
 func winner() -> int:
 	if hands[PLAYER].is_empty():
 		return PLAYER
 	if hands[ENEMY].is_empty():
 		return ENEMY
+	if hands[PLAYER].size() >= BUST_LIMIT:
+		return ENEMY
+	if hands[ENEMY].size() >= BUST_LIMIT:
+		return PLAYER
 	if stuck_in_row >= 4:
 		return PLAYER if hands[PLAYER].size() < hands[ENEMY].size() else ENEMY
 	return -1
