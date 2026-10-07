@@ -93,7 +93,8 @@ func _swap_to(screen: Control, show_hud: bool, mood: String) -> void:
 		await get_tree().process_frame
 	_busy = true
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
-	var out := create_tween()
+	# Transitions can start from the pause menu (Abandon Run), so the fade must run while paused.
+	var out := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	out.tween_property(_fade, "color:a", 1.0, 0.0 if _current == null else 0.2)
 	await out.finished
 	if _current != null:
@@ -108,7 +109,7 @@ func _swap_to(screen: Control, show_hud: bool, mood: String) -> void:
 	_hud.visible = show_hud
 	_hud.refresh()
 	_set_mood(mood, true)
-	var back := create_tween()
+	var back := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	back.tween_property(_fade, "color:a", 0.0, 0.3)
 	await back.finished
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
