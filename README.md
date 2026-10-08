@@ -55,7 +55,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
   | Joker's Grin | Start every battle with a free random trick card. |
   | Trickster's Pact | Trick cards appear far more often in rewards, shops and events. |
 - **20 opponents** in three acts, each with an AI style ("random", "aggressive" or "smart"). Elites and bosses have rule-bending abilities: *Spiky*, *Lockdown*, *House Tax*, *Chroma Shift*, *Quick Start* and *Thorns*.
-- **6 events**, a shop with card removal, and campfires that offer rest or an enchantment.
+- **12 events**, half of them built around trick cards (the Two-Tone Painter, the Frozen Lake, Secret Santa, the Double-or-Nothing Table, the Clockmaker and the Jester's Game). There is also a shop with card removal, and campfires that offer rest or an enchantment.
 - Lifetime stats and settings (sound on/off, fast mode) are saved to `user://dos_meta.cfg`.
 
 ## Project layout
