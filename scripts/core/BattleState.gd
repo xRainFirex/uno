@@ -20,6 +20,7 @@ var top_card: CardData
 var active_color: int = 0
 var current: int = PLAYER
 var bonus_turns := 0
+var _on_bonus_turn := false
 var turn_number: Array[int] = [0, 0]
 var charms: Array = []
 var abilities: Array = []
@@ -48,6 +49,11 @@ func setup(player_deck: Array, enemy_deck: Array, p_charms: Array, p_abilities: 
 			draw_one(PLAYER)
 		if i < enemy_hand:
 			draw_one(ENEMY)
+	# Joker's Grin: a free trick card for this battle only (it never joins the run deck).
+	if has_charm("jokers_grin"):
+		var joker := CardFactory.trick_card()
+		joker.owner_side = PLAYER
+		hands[PLAYER].append(joker)
 	_flip_first_card()
 	current = PLAYER
 
@@ -76,6 +82,8 @@ func has_ability(id: String) -> bool:
 # can_play
 # DESCRIPTION: Matching rules, including the Lockdown enemy ability.
 func can_play(card: CardData, side: int) -> bool:
+	if card.is_dual() and side == PLAYER and has_charm("harlequin"):
+		return true
 	if card.is_wild():
 		if side == PLAYER and has_ability("lockdown") and turn_number[PLAYER] <= 3:
 			return false
@@ -132,7 +140,10 @@ func draw_many(side: int, amount: int) -> Array:
 # DESCRIPTION: Start-of-turn enemy abilities (House Tax, Chroma Shift).
 func begin_turn(side: int) -> Dictionary:
 	turn_number[side] += 1
-	var res := {"forced": [], "color_shift": -1, "texts": []}
+	var res := {"forced": [], "color_shift": -1, "texts": [], "bonus": _on_bonus_turn, "heal": 0}
+	if side == PLAYER and _on_bonus_turn and has_charm("clockwork"):
+		res.heal = 1
+	_on_bonus_turn = false
 	if side == ENEMY:
 		if has_ability("tax") and turn_number[ENEMY] % 4 == 0:
 			res.forced = draw_many(PLAYER, 1)
@@ -219,24 +230,30 @@ func play(side: int, card: CardData, chosen: int = -1) -> Dictionary:
 				res.swapped = true
 				res.texts.append("SWAP!")
 		CardData.Type.DOUBLE_DOWN:
-			penalty += mini(hands[opp].size(), CardData.DOUBLE_DOWN_CAP)
+			var no_cap := side == PLAYER and has_charm("high_roller")
+			penalty += hands[opp].size() if no_cap else mini(hands[opp].size(), CardData.DOUBLE_DOWN_CAP)
 			res.texts.append("x2!")
 		CardData.Type.FREEZE:
-			res.extra_turns = 2
+			res.extra_turns = 3 if side == PLAYER and has_charm("permafrost") else 2
 			res.texts.append("FREEZE!")
 		CardData.Type.GIFT:
-			var amount := mini(CardData.GIFT_AMOUNT, hands[side].size() - 1)
+			var wrapped := side == PLAYER and has_charm("wrapping_paper")
+			var amount := mini(CardData.GIFT_AMOUNT + (1 if wrapped else 0), hands[side].size() - 1)
 			for i in amount:
 				var c: CardData = hands[side].pick_random()
 				hands[side].erase(c)
 				hands[opp].append(c)
 				res.gifted.append(c)
+			if wrapped:
+				res.gold += 3 * res.gifted.size()
 			res.texts.append("GIFT!")
 		CardData.Type.WILD_CHAIN:
 			res.extra_turns = 1
 			res.texts.append("CHAIN!")
 
 	if side == PLAYER:
+		if card.type == CardData.Type.WILD_MIRROR and has_charm("funhouse_mirror"):
+			penalty += 2
 		if card.is_wild() and has_charm("prism"):
 			penalty += 1
 		if card.is_draw_card() and has_charm("vampire_fang"):
@@ -276,6 +293,7 @@ func note_stuck() -> void:
 func end_turn() -> void:
 	if bonus_turns > 0:
 		bonus_turns -= 1
+		_on_bonus_turn = true
 	else:
 		current = 1 - current
 

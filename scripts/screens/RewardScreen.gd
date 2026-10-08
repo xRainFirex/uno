@@ -47,7 +47,7 @@ func _ready() -> void:
 		var row := UIKit.hbox(46)
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
 		col.add_child(row)
-		for card in CardFactory.reward_choices(card_count, RunState.act, params.get("card_bonus", 0.0)):
+		for card in CardFactory.reward_choices(card_count, RunState.act, params.get("card_bonus", 0.0), RunState.has_charm("tricksters_pact")):
 			var holder := UIKit.vbox(6 if compact else 12)
 			var box := Control.new()
 			box.custom_minimum_size = CardView.CARD_SIZE * card_scale + Vector2(0, 34)

@@ -46,6 +46,7 @@ var _modal := false
 var _finished := false
 var _catch_open := false
 var _hovered: CardView
+var _bonus_turn := false
 var _time := 0.0
 
 func _ready() -> void:
@@ -682,11 +683,16 @@ func _loop() -> void:
 			Sfx.play("power")
 			_refresh_info()
 			await _wait(0.6)
+		if start.heal > 0:
+			RunState.heal(start.heal)
+			Sfx.play("heal")
+			_float_text("+%d HP  (Clockwork)" % start.heal, Vector2(size.x / 2.0 - 220, size.y - 300), UIKit.SUCCESS, 30)
 		if not start.forced.is_empty():
 			_log_line("[color=#e5484d]House Tax:[/color] you draw a card.")
 			Sfx.play("card")
 			_sync_hands()
 			await _wait(0.6)
+		_bonus_turn = start.bonus
 		if side == P:
 			await _player_turn()
 		else:
@@ -713,7 +719,7 @@ func _player_turn() -> void:
 		await _wait(1.0)
 		return
 	_awaiting = true
-	_set_status("Your turn", UIKit.SUCCESS)
+	_set_status("Bonus turn!" if _bonus_turn else "Your turn", UIKit.GOLD if _bonus_turn else UIKit.SUCCESS)
 	_refresh_controls()
 	await _player_done
 	_awaiting = false
@@ -721,7 +727,7 @@ func _player_turn() -> void:
 	_refresh_controls()
 
 func _enemy_turn() -> void:
-	_set_status("%s is thinking..." % enemy.name, UIKit.DANGER)
+	_set_status("%s takes a bonus turn..." % enemy.name if _bonus_turn else "%s is thinking..." % enemy.name, UIKit.DANGER)
 	await _wait(0.7 + randf() * 0.4)
 	var choice := EnemyAI.choose(state, E, enemy.style)
 	if choice.is_empty():

@@ -75,4 +75,10 @@ func _initialize() -> void:
 					push_error("Unreachable map node")
 					failures += 1
 	print("Map check done, failures %d" % failures)
+	# Trickster's Pact generation: every rarity must produce a valid card.
+	for i in 300:
+		var c := CardFactory.card_of_rarity(i % 3, true)
+		if c == null or c.title() == "":
+			push_error("Bad trick-weighted card")
+			failures += 1
 	quit(1 if failures > 0 else 0)

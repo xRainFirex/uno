@@ -128,21 +128,30 @@ static func dual(value: int) -> CardData:
 
 # card_of_rarity
 # DESCRIPTION: Rolls a random card of the requested rarity.
-static func card_of_rarity(rarity: int) -> CardData:
+# tricks: Trickster's Pact is held, so lean heavily towards wacky cards.
+static func card_of_rarity(rarity: int, tricks: bool = false) -> CardData:
 	match rarity:
 		CardData.Rarity.COMMON:
+			if tricks and randf() < 0.35:
+				return dual(randi_range(0, 9))
 			return number(random_color(), randi_range(0, 9))
 		CardData.Rarity.UNCOMMON:
 			var t: int = UNCOMMON_POOL.pick_random()
+			if tricks and randf() < 0.6:
+				t = [CardData.Type.FREEZE, CardData.Type.GIFT, CardData.Type.NUMBER].pick_random()
 			if t == CardData.Type.NUMBER:
 				return dual(randi_range(0, 9))
 			return action(random_color(), t)
+	var weights := RARE_POOL.duplicate()
+	if tricks:
+		for t in [CardData.Type.DOUBLE_DOWN, CardData.Type.WILD_CHAIN, CardData.Type.WILD_MIRROR, CardData.Type.WILD_SWAP]:
+			weights[t] *= 3
 	var total := 0
-	for t in RARE_POOL:
-		total += RARE_POOL[t]
+	for t in weights:
+		total += weights[t]
 	var roll := randi_range(1, total)
-	for t in RARE_POOL:
-		roll -= RARE_POOL[t]
+	for t in weights:
+		roll -= weights[t]
 		if roll <= 0:
 			if t == CardData.Type.DOUBLE_DOWN:
 				return action(random_color(), t)
@@ -151,27 +160,27 @@ static func card_of_rarity(rarity: int) -> CardData:
 
 # reward_card
 # DESCRIPTION: A random card for rewards and shops. Elites and later acts roll better.
-static func reward_card(act: int = 1, bonus: float = 0.0) -> CardData:
+static func reward_card(act: int = 1, bonus: float = 0.0, tricks: bool = false) -> CardData:
 	var roll := randf() - bonus - (act - 1) * 0.04
 	var rarity := CardData.Rarity.COMMON
 	if roll < 0.14:
 		rarity = CardData.Rarity.RARE
 	elif roll < 0.5:
 		rarity = CardData.Rarity.UNCOMMON
-	var card := card_of_rarity(rarity)
+	var card := card_of_rarity(rarity, tricks)
 	if randf() < 0.08 + 0.05 * act + bonus * 0.5:
 		card.enchant = randi_range(1, CardData.Enchant.size() - 1) as CardData.Enchant
 	return card
 
 # reward_choices
 # DESCRIPTION: Returns `count` distinct-looking reward cards.
-static func reward_choices(count: int, act: int, bonus: float = 0.0) -> Array[CardData]:
+static func reward_choices(count: int, act: int, bonus: float = 0.0, tricks: bool = false) -> Array[CardData]:
 	var out: Array[CardData] = []
 	var seen := {}
 	var guard := 0
 	while out.size() < count and guard < 50:
 		guard += 1
-		var c := reward_card(act, bonus)
+		var c := reward_card(act, bonus, tricks)
 		if seen.has(c.title()):
 			continue
 		seen[c.title()] = true

@@ -123,6 +123,44 @@ static func paint(ci: CanvasItem, icon_name: String, c: Vector2, r: float, col: 
 			ci.draw_line(c + Vector2(0.22, 0.22) * r, c + Vector2(0.75, 0.75) * r, col, r * 0.24)
 		"map":
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-0.8, -0.6) * r, c + Vector2(-0.25, -0.75) * r, c + Vector2(0.25, -0.6) * r, c + Vector2(0.8, -0.75) * r, c + Vector2(0.8, 0.6) * r, c + Vector2(0.25, 0.75) * r, c + Vector2(-0.25, 0.6) * r, c + Vector2(-0.8, 0.75) * r]), col)
+		"mask":
+			var face := UIKit.ellipse_points(c, Vector2(0.9, 0.62) * r, 0.0, 32)
+			ci.draw_colored_polygon(face, col)
+			ci.draw_colored_polygon(UIKit.ellipse_points(c, Vector2(0.9, 0.62) * r, 0.0, 16, -PI / 2.0, PI / 2.0), col.darkened(0.35))
+			for sgn in [-1.0, 1.0]:
+				ci.draw_colored_polygon(UIKit.ellipse_points(c + Vector2(sgn * 0.38, -0.08) * r, Vector2(0.22, 0.13) * r, sgn * 0.25, 16), dark.darkened(0.6))
+		"dice":
+			ci.draw_rect(Rect2(c - Vector2(0.75, 0.75) * r, Vector2(1.5, 1.5) * r), col)
+			for p in [Vector2(-0.4, -0.4), Vector2(0.4, -0.4), Vector2(0, 0), Vector2(-0.4, 0.4), Vector2(0.4, 0.4)]:
+				ci.draw_circle(c + p * r, r * 0.14, dark.darkened(0.6))
+		"snowflake":
+			for i in 3:
+				var d := Vector2.UP.rotated(i * PI / 3.0) * r * 0.85
+				ci.draw_line(c - d, c + d, col, r * 0.14)
+				for sgn in [-1.0, 1.0]:
+					var base: Vector2 = c + d * 0.55 * sgn
+					ci.draw_line(base, base + (d * sgn * 0.45).rotated(0.8), col, r * 0.1)
+					ci.draw_line(base, base + (d * sgn * 0.45).rotated(-0.8), col, r * 0.1)
+		"gift":
+			ci.draw_rect(Rect2(c + Vector2(-0.65, -0.1) * r, Vector2(1.3, 0.85) * r), col)
+			ci.draw_rect(Rect2(c + Vector2(-0.78, -0.42) * r, Vector2(1.56, 0.34) * r), col.lightened(0.15))
+			ci.draw_rect(Rect2(c + Vector2(-0.1, -0.42) * r, Vector2(0.2, 1.17) * r), dark)
+			for sgn in [-1.0, 1.0]:
+				ci.draw_colored_polygon(UIKit.ellipse_points(c + Vector2(sgn * 0.25, -0.6) * r, Vector2(0.24, 0.15) * r, sgn * 0.5, 16), col)
+		"clock":
+			ci.draw_arc(c, r * 0.78, 0, TAU, 32, col, r * 0.14, true)
+			ci.draw_line(c, c + Vector2(0, -0.5) * r, col, r * 0.12)
+			ci.draw_line(c, c + Vector2(0.38, 0.12) * r, col, r * 0.12)
+			ci.draw_circle(c, r * 0.1, col)
+		"mirror":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-0.12, -0.7) * r, c + Vector2(-0.12, 0.7) * r, c + Vector2(-0.85, 0) * r]), col)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0.12, -0.7) * r, c + Vector2(0.12, 0.7) * r, c + Vector2(0.85, 0) * r]), col.darkened(0.3))
+		"joker":
+			var tips := [Vector2(-0.8, -0.55), Vector2(0, -0.85), Vector2(0.8, -0.55)]
+			for t in tips:
+				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-0.45, 0.35) * r, c + Vector2(0.45, 0.35) * r, c + t * r]), col)
+				ci.draw_circle(c + t * r, r * 0.14, col.lightened(0.3))
+			ci.draw_rect(Rect2(c + Vector2(-0.6, 0.3) * r, Vector2(1.2, 0.3) * r), col.darkened(0.3))
 		_:
 			_star(ci, c, r, col)
 

@@ -23,6 +23,15 @@ const DATA := {
 	"rubber_gloves": {"name": "Rubber Gloves", "desc": "The first draw penalty against you each battle is reduced by 2.", "icon": "text:-2", "color": Color(0.95, 0.85, 0.3), "rarity": 0},
 	"phoenix_feather": {"name": "Phoenix Feather", "desc": "The first time you would die, revive at 50% HP. (Consumed)", "icon": "flame", "color": Color(1.0, 0.5, 0.2), "rarity": 2},
 	"deep_pockets": {"name": "Deep Pockets", "desc": "Shop prices are 25% lower.", "icon": "bag", "color": Color(0.35, 0.75, 0.45), "rarity": 0},
+	# Trick-card synergies
+	"harlequin": {"name": "Harlequin Mask", "desc": "Your dual-colour cards can be played on anything.", "icon": "mask", "color": Color(0.95, 0.45, 0.65), "rarity": 2},
+	"high_roller": {"name": "High Roller", "desc": "Your Double Down has no limit. Push them over 25 cards to Bust them!", "icon": "dice", "color": Color(0.95, 0.35, 0.3), "rarity": 1},
+	"permafrost": {"name": "Permafrost", "desc": "Your Freeze cards give 3 extra turns instead of 2.", "icon": "snowflake", "color": Color(0.55, 0.85, 1.0), "rarity": 1},
+	"wrapping_paper": {"name": "Wrapping Paper", "desc": "Your Gift cards give away 1 more card, and earn 3 gold per card gifted.", "icon": "gift", "color": Color(0.9, 0.4, 0.6), "rarity": 0},
+	"clockwork": {"name": "Clockwork", "desc": "Heal 1 HP at the start of every extra turn you take (Skip, Freeze, Chain...).", "icon": "clock", "color": Color(0.85, 0.7, 0.4), "rarity": 0},
+	"funhouse_mirror": {"name": "Funhouse Mirror", "desc": "Your Wild Mirror also makes the opponent draw 2.", "icon": "mirror", "color": Color(0.7, 0.6, 1.0), "rarity": 0},
+	"jokers_grin": {"name": "Joker's Grin", "desc": "Start every battle with a free random trick card in your hand.", "icon": "joker", "color": Color(0.6, 0.85, 0.35), "rarity": 1},
+	"tricksters_pact": {"name": "Trickster's Pact", "desc": "Trick cards appear far more often in rewards, shops and events.", "icon": "cards", "color": Color(0.75, 0.6, 1.0), "rarity": 0},
 }
 
 static func get_def(id: String) -> Dictionary:

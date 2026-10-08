@@ -144,7 +144,7 @@ func _shrine() -> Dictionary:
 				Sfx.play("power")
 				return "The candles flicker. You receive %s: %s" % [Charms.get_def(id).name, Charms.get_def(id).desc]},
 			{"label": "Pray  (add a random rare card to your deck)", "action": func():
-				var card := CardFactory.card_of_rarity(CardData.Rarity.RARE)
+				var card := CardFactory.card_of_rarity(CardData.Rarity.RARE, RunState.has_charm("tricksters_pact"))
 				RunState.add_card(card)
 				Sfx.play("power")
 				return "A card materialises on the altar: %s." % card.title()},
@@ -159,7 +159,7 @@ func _dealer() -> Dictionary:
 		"choices": [
 			{"label": "Buy the mystery card  (40 gold)", "enabled": RunState.gold >= 40, "action": func():
 				RunState.spend_gold(40)
-				var card := CardFactory.card_of_rarity(CardData.Rarity.RARE)
+				var card := CardFactory.card_of_rarity(CardData.Rarity.RARE, RunState.has_charm("tricksters_pact"))
 				if randf() < 0.5:
 					card.enchant = randi_range(1, CardData.Enchant.size() - 1) as CardData.Enchant
 				RunState.add_card(card)
@@ -171,7 +171,7 @@ func _dealer() -> Dictionary:
 					var c: CardData = RunState.deck.pick_random()
 					lost.append(c.title())
 					RunState.remove_card(c)
-				var card := CardFactory.card_of_rarity(CardData.Rarity.UNCOMMON)
+				var card := CardFactory.card_of_rarity(CardData.Rarity.UNCOMMON, RunState.has_charm("tricksters_pact"))
 				RunState.add_card(card)
 				Sfx.play("power")
 				return "You hand over %s and %s, and receive %s." % [lost[0], lost[1], card.title()]},

@@ -37,9 +37,10 @@ func _ready() -> void:
 	var cards_row := UIKit.hbox(30)
 	cards_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(cards_row)
-	var stock: Array[CardData] = CardFactory.reward_choices(3, RunState.act)
-	stock.append(CardFactory.card_of_rarity(CardData.Rarity.UNCOMMON))
-	stock.append(CardFactory.card_of_rarity(CardData.Rarity.RARE))
+	var tricks := RunState.has_charm("tricksters_pact")
+	var stock: Array[CardData] = CardFactory.reward_choices(3, RunState.act, 0.0, tricks)
+	stock.append(CardFactory.card_of_rarity(CardData.Rarity.UNCOMMON, tricks))
+	stock.append(CardFactory.card_of_rarity(CardData.Rarity.RARE, tricks))
 	for card in stock:
 		var price := int(CardFactory.price(card) * mult)
 		var holder := UIKit.vbox(8)

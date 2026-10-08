@@ -114,8 +114,10 @@ func refresh() -> void:
 	_deck_button.text = "DECK  %d" % RunState.deck.size()
 	for c in _charm_box.get_children():
 		c.queue_free()
+	# Shrink the icons when the collection grows so the bar never overflows.
+	var icon_size := 44.0 if RunState.charms.size() <= 10 else 30.0
 	for id in RunState.charms:
-		_charm_box.add_child(CharmIcon.new(id, 44))
+		_charm_box.add_child(CharmIcon.new(id, icon_size))
 
 func _pulse(node: Control, _col: Color) -> void:
 	node.pivot_offset = node.size / 2.0

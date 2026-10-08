@@ -42,7 +42,18 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
   From Act I, elites and bosses carry some trick cards (except Wild Swap and Discard All), and from Act II regular opponents do too. The count grows each act.
 - **Bust:** anyone holding 25 cards loses the battle immediately.
 - **Enchantments:** *Gilded* (+3 gold when played), *Barbed* (opponent draws 1) and *Healing* (+2 HP). You get these at campfires, from events, and sometimes on reward cards.
-- **15 charms:** passive powers such as *Prism*, *Seer's Eye*, *Spyglass*, *Phoenix Feather* and *Megaphone*.
+- **23 charms:** passive powers such as *Prism*, *Seer's Eye*, *Spyglass*, *Phoenix Feather* and *Megaphone*. Eight of them build around trick cards:
+
+  | Charm | Effect |
+  | --- | --- |
+  | Harlequin Mask | Your dual-colour cards can be played on anything. |
+  | High Roller | Your Double Down has no cap. Push them past 25 cards to Bust them. |
+  | Permafrost | Freeze gives 3 extra turns instead of 2. |
+  | Wrapping Paper | Gift gives away 1 more card and earns 3 gold per card gifted. |
+  | Clockwork | Heal 1 HP at the start of every extra turn. |
+  | Funhouse Mirror | Your Wild Mirror also makes the opponent draw 2. |
+  | Joker's Grin | Start every battle with a free random trick card. |
+  | Trickster's Pact | Trick cards appear far more often in rewards, shops and events. |
 - **20 opponents** in three acts, each with an AI style ("random", "aggressive" or "smart"). Elites and bosses have rule-bending abilities: *Spiky*, *Lockdown*, *House Tax*, *Chroma Shift*, *Quick Start* and *Thorns*.
 - **6 events**, a shop with card removal, and campfires that offer rest or an enchantment.
 - Lifetime stats and settings (sound on/off, fast mode) are saved to `user://dos_meta.cfg`.
