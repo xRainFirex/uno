@@ -100,7 +100,7 @@ func _show_how_to_play() -> void:
 [b][color=#f5c542]Battles[/color][/b]  Each battle is a one-on-one card duel. Match the top card by [b]colour[/b], [b]number[/b] or [b]symbol[/b]. Wilds go on anything. Empty your hand to win.
 [b][color=#f5c542]Your own deck[/color][/b]  You draw from your personal deck, which grows as you collect cards. Your opponent draws from theirs.
 [b][color=#f5c542]Draw, then decide[/color][/b]  Click your deck (or press [b]Space[/b]) to draw. If the drawn card fits you may play it, or pass.
-[b][color=#f5c542]Shout QUIET![/color][/b]  With two cards left, press [b]QUIET![/b] (or [b]Q[/b]) before you play, or you may get caught and draw 2. Catch your opponent when they forget!
+[b][color=#f5c542]Shout QUIET![/color][/b]  When a play will leave you on your last card, press [b]QUIET![/b] (or [b]Q[/b]) first, or you may get caught and draw 2. Catch your opponent when they forget!
 [b][color=#f5c542]Losing hurts[/color][/b]  Lose a battle and you take damage for every card left in your hand, then face the same opponent again. You can't move on until you win. Reach 0 HP and the run is over.
 [b][color=#f5c542]The run[/color][/b]  Choose your path through three acts: battles, elites, shops, campfires, treasure and strange events. Beat each act's boss to move on.
 [b][color=#f5c542]Build your deck[/color][/b]  Win new cards, buy [b]charms[/b] (passive powers), remove weak cards and [b]enchant[/b] cards (Gilded, Barbed, Healing).

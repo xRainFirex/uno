@@ -182,7 +182,7 @@ func _build_ui() -> void:
 	_quiet_button.focus_mode = Control.FOCUS_NONE
 	_quiet_button.custom_minimum_size = Vector2(150, 150)
 	_quiet_button.pivot_offset = Vector2(75, 75)
-	_quiet_button.tooltip_text = "Call QUIET! before playing your second-to-last card (Q)"
+	_quiet_button.tooltip_text = "Down to your last card? Call QUIET! as you play your second-to-last card (Q)"
 	_quiet_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for st in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var col := UIKit.DANGER
