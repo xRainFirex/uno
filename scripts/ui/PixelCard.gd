@@ -34,6 +34,11 @@ const MINI := {
 	"swap": [".#...", "###.#", ".#.#.", "#.###", "...#."],
 }
 const SUIT_MINI := ["ember", "tide", "moss", "dusk"]
+# 6x6 bold symbols for the +2 / +4 / x2 centre labels.
+const BOLD := {
+	"+": ["..##..", "..##..", "######", "######", "..##..", "..##.."],
+	"x": ["##..##", "######", ".####.", ".####.", "######", "##..##"],
+}
 # 9x11 card-back letter.
 const SIGIL_Q := [
 	"..#####..", ".##...##.", "##.....##", "##.....##", "##.....##", "##.....##",
@@ -105,6 +110,29 @@ static func _text_shadowed(pc: PixelCanvas, text: String, center: Vector2, px: i
 	pc.draw_text_centered(text, center + Vector2(1, 1), px, col.darkened(0.6))
 	pc.draw_text_centered(text, center, px, col)
 
+# _combo
+# DESCRIPTION: Centre label for +2 / +4 / x2: a square symbol beside a tall digit (the same height as the
+#              numerals on number cards), with a 1px gap so the pair sits centred on the plate.
+static func _combo(pc: PixelCanvas, symbol: String, digit: String, col: Color) -> void:
+	var x := 6
+	var y := 11
+	for pass_i in 2:
+		var o := 1 if pass_i == 0 else 0
+		var c := col.darkened(0.6) if pass_i == 0 else col
+		var rows: Array = BOLD[symbol]
+		for ry in rows.size():
+			for rx in rows[ry].length():
+				if rows[ry][rx] == "#":
+					pc.plot(x + rx + o, y + 5 + ry + o, c)
+		_glyph(pc, digit, Vector2i(x + 7 + o, y + o), 2, 3, c)
+
+static func _glyph(pc: PixelCanvas, ch: String, pos: Vector2i, sx: int, sy: int, col: Color) -> void:
+	var g: Array = PixelCanvas.FONT.get(ch, PixelCanvas.FONT["?"])
+	for row in 5:
+		for colx in 3:
+			if g[row][colx] == "#":
+				pc.draw_rect(Rect2(pos.x + colx * sx, pos.y + row * sy, sx, sy), col)
+
 # _stamp_icon
 # DESCRIPTION: Rasterises a Glyph icon into its own small canvas, outlines it, then stamps it on the card.
 static func _stamp_icon(pc: PixelCanvas, icon: String, center: Vector2i, size: int, col: Color) -> void:
@@ -152,11 +180,11 @@ static func _draw_face(pc: PixelCanvas, card: CardData) -> void:
 		CardData.Type.NUMBER:
 			_text_shadowed(pc, str(card.value), center, 3, ink)
 		CardData.Type.DRAW_TWO:
-			_text_shadowed(pc, "+2", center, 2, ink)
+			_combo(pc, "+", "2", ink)
 		CardData.Type.WILD_DRAW_FOUR:
-			_text_shadowed(pc, "+4", center, 2, INK)
+			_combo(pc, "+", "4", INK)
 		CardData.Type.DOUBLE_DOWN:
-			_text_shadowed(pc, "x2", center, 2, ink)
+			_combo(pc, "x", "2", ink)
 		CardData.Type.SKIP:
 			_stamp_icon(pc, "pause", Vector2i(13, 19), 14, col)
 		CardData.Type.REVERSE:
