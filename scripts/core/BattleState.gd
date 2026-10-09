@@ -230,15 +230,17 @@ func play(side: int, card: CardData, chosen: int = -1) -> Dictionary:
 				res.swapped = true
 				res.texts.append("SWAP!")
 		CardData.Type.DOUBLE_DOWN:
-			var no_cap := side == PLAYER and has_charm("high_roller")
+			var no_cap := (side == PLAYER and has_charm("high_roller")) or (side == ENEMY and has_ability("jackpot"))
 			penalty += hands[opp].size() if no_cap else mini(hands[opp].size(), CardData.DOUBLE_DOWN_CAP)
 			res.texts.append("x2!")
 		CardData.Type.FREEZE:
-			res.extra_turns = 3 if side == PLAYER and has_charm("permafrost") else 2
+			var long_freeze := (side == PLAYER and has_charm("permafrost")) or (side == ENEMY and has_ability("frostbite"))
+			res.extra_turns = 3 if long_freeze else 2
 			res.texts.append("FREEZE!")
 		CardData.Type.GIFT:
 			var wrapped := side == PLAYER and has_charm("wrapping_paper")
-			var amount := mini(CardData.GIFT_AMOUNT + (1 if wrapped else 0), hands[side].size() - 1)
+			var generous := side == ENEMY and has_ability("generous")
+			var amount := mini(CardData.GIFT_AMOUNT + (1 if wrapped or generous else 0), hands[side].size() - 1)
 			for i in amount:
 				var c: CardData = hands[side].pick_random()
 				hands[side].erase(c)

@@ -68,6 +68,8 @@ static func enemy_deck(kind: String, act: int, enemy_kind: String = "battle") ->
 	var actions := {}
 	var wilds := 1
 	var draw_fours := 1
+	var tricks := {}    # wacky cards that define the trick-themed archetypes
+	var duals := 0
 	match kind:
 		"basic":
 			actions = {CardData.Type.SKIP: 2, CardData.Type.REVERSE: 2, CardData.Type.DRAW_TWO: 2}
@@ -88,12 +90,53 @@ static func enemy_deck(kind: String, act: int, enemy_kind: String = "battle") ->
 			actions = {CardData.Type.SKIP: 3, CardData.Type.REVERSE: 2, CardData.Type.DRAW_TWO: 3, CardData.Type.DISCARD_ALL: 2}
 			wilds = 2
 			draw_fours = 2
+		# --- Trick-card archetypes ---
+		"tricky":
+			max_number = 5
+			actions = {CardData.Type.SKIP: 2, CardData.Type.DRAW_TWO: 2}
+			tricks = {CardData.Type.FREEZE: 1, CardData.Type.GIFT: 1, CardData.Type.DOUBLE_DOWN: 1, CardData.Type.WILD_CHAIN: 1, CardData.Type.WILD_MIRROR: 1}
+			duals = 2
+		"two_tone":
+			max_number = 3
+			actions = {CardData.Type.SKIP: 2, CardData.Type.DRAW_TWO: 2}
+			duals = 14
+		"frosty":
+			max_number = 5
+			actions = {CardData.Type.SKIP: 2, CardData.Type.DRAW_TWO: 2}
+			tricks = {CardData.Type.FREEZE: 6, CardData.Type.WILD_CHAIN: 1}
+		"giving":
+			max_number = 5
+			actions = {CardData.Type.DRAW_TWO: 2, CardData.Type.REVERSE: 2}
+			tricks = {CardData.Type.GIFT: 6, CardData.Type.DOUBLE_DOWN: 1}
+		"clockwork":
+			max_number = 5
+			actions = {CardData.Type.SKIP: 3, CardData.Type.REVERSE: 2, CardData.Type.DRAW_TWO: 2}
+			tricks = {CardData.Type.FREEZE: 3, CardData.Type.WILD_CHAIN: 3}
+		"high_stakes":
+			max_number = 5
+			actions = {CardData.Type.DRAW_TWO: 3}
+			tricks = {CardData.Type.DOUBLE_DOWN: 5, CardData.Type.WILD_MIRROR: 2}
+			draw_fours = 2
+		"circus":
+			max_number = 4
+			actions = {CardData.Type.SKIP: 2, CardData.Type.DRAW_TWO: 2}
+			tricks = {CardData.Type.FREEZE: 2, CardData.Type.GIFT: 2, CardData.Type.DOUBLE_DOWN: 2, CardData.Type.WILD_CHAIN: 2, CardData.Type.WILD_MIRROR: 2}
+			duals = 4
+			wilds = 2
 	for c in COLORS:
 		for i in range(1, max_number + 1):
 			deck.append(number(c, i))
 	for t in actions:
 		for i in actions[t]:
 			deck.append(action(random_color(), t))
+	for t in tricks:
+		for i in tricks[t]:
+			if t == CardData.Type.WILD_CHAIN or t == CardData.Type.WILD_MIRROR:
+				deck.append(wild(t))
+			else:
+				deck.append(action(random_color(), t))
+	for i in duals:
+		deck.append(dual(randi_range(1, 9)))
 	for i in wilds:
 		deck.append(wild())
 	for i in draw_fours:

@@ -10,7 +10,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 
 - **Map.** Each of the three acts is a branching map. Every row offers a choice of battles, elites, events, shops, campfires and treasure, with a boss at the top.
 - **Battles.** Each battle is a one-on-one card duel. Match the top card by colour, number or symbol. You draw from **your own deck**, which you grow and refine over the run, and the opponent draws from theirs.
-- **Losing hurts.** If the opponent empties their hand first, you take damage for each card left in your hand. At 0 HP the run is over.
+- **Losing hurts.** If the opponent empties their hand first, you take damage for each card left in your hand and must replay the same battle. You can't move on until you win. At 0 HP the run is over.
 - **DOS!** With two cards left, press **DOS!** (or `D`) before playing, or you may get caught and draw 2. If the opponent forgets to call it, press **CATCH!** in time to make them draw 2.
 
 ### Controls
@@ -54,7 +54,18 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
   | Funhouse Mirror | Your Wild Mirror also makes the opponent draw 2. |
   | Joker's Grin | Start every battle with a free random trick card. |
   | Trickster's Pact | Trick cards appear far more often in rewards, shops and events. |
-- **20 opponents** in three acts, each with an AI style ("random", "aggressive" or "smart"). Elites and bosses have rule-bending abilities: *Spiky*, *Lockdown*, *House Tax*, *Chroma Shift*, *Quick Start* and *Thorns*.
+- **29 opponents** in three acts, each with an AI style ("random", "aggressive" or "smart"). Elites and bosses have rule-bending abilities: *Spiky*, *Lockdown*, *House Tax*, *Chroma Shift*, *Quick Start* and *Thorns*. Trick-themed opponents build their decks around trick cards, some with abilities that mirror the trick charms (*Frostbite*: 3-turn Freeze, *Jackpot*: uncapped Double Down, *Generous*: their Gift gives you 3 cards):
+
+  | Opponent | Act | Theme |
+  | --- | --- | --- |
+  | Pip | I | Small mixed bag of tricks |
+  | Patchwork Pete (elite) | I | Dual-colour cards |
+  | Frost | II | Freeze, with Frostbite |
+  | Kringle | II | Gift, with Generous |
+  | Gambler Gus (elite) | II | Double Down, with Jackpot |
+  | Clockwork Clara | III | Freeze and Wild Chain |
+  | The Ringmaster (elite) | III | Every trick card, with Jackpot and Generous |
+  | The Jester King (boss) | III | Alternate final boss: every trick card, with Frostbite and Jackpot |
 - **12 events**, half of them built around trick cards (the Two-Tone Painter, the Frozen Lake, Secret Santa, the Double-or-Nothing Table, the Clockmaker and the Jester's Game). There is also a shop with card removal, and campfires that offer rest or an enchantment.
 - Lifetime stats and settings (sound on/off, fast mode) are saved to `user://dos_meta.cfg`.
 

@@ -119,6 +119,8 @@ func _build_ui() -> void:
 	einfo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	erow.add_child(einfo)
 	var kind_tag: String = {"battle": "", "elite": "ELITE  ·  ", "boss": "BOSS  ·  "}[enemy.kind]
+	if int(enemy.get("attempt", 1)) > 1:
+		kind_tag = "REMATCH #%d  ·  " % int(enemy.attempt) + kind_tag
 	einfo.add_child(UIKit.label(kind_tag + enemy.title.to_upper(), 15, UIKit.DANGER if enemy.kind != "battle" else UIKit.TEXT_MUTED, true))
 	einfo.add_child(UIKit.label(enemy.name, 30, UIKit.TEXT, true))
 	var hits := UIKit.label("Hits for %d per card left in your hand" % enemy.attack, 16, UIKit.TEXT_MUTED)
@@ -128,7 +130,11 @@ func _build_ui() -> void:
 		al.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		al.custom_minimum_size.x = 280
 		einfo.add_child(al)
-	var tricks := CardFactory.enemy_trick_count(RunState.act, enemy.kind)
+	# Count the trick cards actually in their deck (themed archetypes plus the act/elite/boss extras).
+	var tricks := 0
+	for c in state.draw_piles[E] + state.hands[E]:
+		if c.is_dual() or c.type >= CardData.Type.DOUBLE_DOWN or c.type == CardData.Type.WILD_SWAP:
+			tricks += 1
 	if tricks > 0:
 		einfo.add_child(UIKit.label("Deck holds %d trick card%s" % [tricks, "" if tricks == 1 else "s"], 16, Color(0.75, 0.6, 1.0), true))
 	_enemy_count_label = UIKit.label("", 18, UIKit.TEXT, true)
@@ -644,7 +650,11 @@ func _pick_color(allowed: Array = [0, 1, 2, 3]) -> int:
 func _intro() -> void:
 	_busy = true
 	_set_status("Shuffling...", UIKit.TEXT_MUTED)
-	_log_line("[b]%s[/b] challenges you!" % enemy.name)
+	var attempt: int = enemy.get("attempt", 1)
+	if attempt > 1:
+		_log_line("[color=#e5484d][b]Rematch![/b][/color] Attempt %d against [b]%s[/b]." % [attempt, enemy.name])
+	else:
+		_log_line("[b]%s[/b] challenges you!" % enemy.name)
 	var total := maxi(state.hands[P].size(), state.hands[E].size())
 	for i in total:
 		for side in 2:
@@ -702,7 +712,7 @@ func _loop() -> void:
 		if RunState.is_dead():
 			_finished = true
 			await _wait(0.6)
-			router.battle_lost()
+			router.battle_lost(enemy)
 			return
 		var w := state.winner()
 		if w >= 0:
@@ -921,9 +931,9 @@ func _finish(winner: int) -> void:
 		col.add_child(hl)
 		if had_phoenix and not RunState.has_charm("phoenix_feather"):
 			col.add_child(UIKit.label("The Phoenix Feather burns away... you rise again!", 20, UIKit.GOLD, true, HORIZONTAL_ALIGNMENT_CENTER))
-		if enemy.kind == "boss" and not RunState.is_dead():
-			col.add_child(UIKit.label("The boss still blocks the way. Recover and try again.", 18, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
-		button = UIKit.button("CONTINUE" if not RunState.is_dead() else "ACCEPT FATE", "DangerButton" if RunState.is_dead() else "", Vector2(320, 60))
+		if not RunState.is_dead():
+			col.add_child(UIKit.label("%s still blocks the way. You must win to move on." % enemy.name, 18, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
+		button = UIKit.button("TRY AGAIN" if not RunState.is_dead() else "ACCEPT FATE", "DangerButton" if RunState.is_dead() else "AccentButton", Vector2(320, 60))
 		button.pressed.connect(_after_loss)
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(UIKit.spacer(0, 6))
@@ -935,14 +945,7 @@ func _finish(winner: int) -> void:
 	tw.tween_property(layer, "modulate:a", 1.0, 0.25)
 
 func _after_loss() -> void:
-	if RunState.is_dead():
-		router.battle_lost()
-		return
-	if enemy.kind == "boss":
-		# Losing to a boss doesn't end the act; you must face them again after recovering.
-		RunState.current_node = -1 if RunState.visited.size() <= 1 else RunState.visited[RunState.visited.size() - 2]
-		RunState.visited.pop_back()
-	router.battle_lost()
+	router.battle_lost(enemy)
 
 
 # ---------- Active colour ring ----------

@@ -167,11 +167,17 @@ func battle_won(enemy: Dictionary, gold: int) -> void:
 		return
 	show_reward(params)
 
-func battle_lost() -> void:
-	if RunState.is_dead():
+# battle_lost
+# DESCRIPTION: Losing never moves you on. If you survive, you face the same opponent again until you win.
+func battle_lost(enemy: Dictionary = {}) -> void:
+	if RunState.is_dead() or enemy.is_empty():
 		show_end(false)
-	else:
-		show_map()
+		return
+	var rematch := enemy.duplicate(true)
+	rematch["attempt"] = int(enemy.get("attempt", 1)) + 1
+	var screen := BattleScreen.new()
+	screen.enemy = rematch
+	_swap_to(screen, true, rematch.kind)
 
 func show_reward(params: Dictionary) -> void:
 	var screen := RewardScreen.new()

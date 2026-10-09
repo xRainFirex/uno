@@ -58,6 +58,43 @@ func _initialize() -> void:
 		else:
 			wins[s.winner()] += 1
 		total_turns += turns
+	# Every opponent in the roster, several times each, so every deck archetype and ability is covered.
+	var roster_games := 0
+	for act in Enemies.ROSTER:
+		for kind in Enemies.ROSTER[act]:
+			for def in Enemies.ROSTER[act][kind]:
+				for rep in 4:
+					var enemy: Dictionary = def.duplicate(true)
+					enemy["kind"] = kind
+					var s := BattleState.new()
+					s.setup(CardFactory.starter_deck(), CardFactory.enemy_deck(enemy.deck, act, kind), [], enemy.abilities, 7, enemy.hand)
+					var expected := s.total_cards()
+					var turns := 0
+					while s.winner() < 0 and turns < MAX_TURNS:
+						turns += 1
+						var side := s.current
+						s.begin_turn(side)
+						if s.winner() >= 0:
+							break
+						var choice := EnemyAI.choose(s, side, "smart" if side == 0 else enemy.style)
+						if choice.is_empty():
+							var drawn := s.draw_one(side)
+							if drawn == null:
+								s.note_stuck()
+							elif s.can_play(drawn, side):
+								choice = {"card": drawn, "color": EnemyAI.color_for(s.hands[side], drawn)}
+						if not choice.is_empty():
+							s.play(side, choice.card, choice.color)
+						if s.total_cards() != expected:
+							push_error("Card count mismatch vs %s" % enemy.name)
+							failures += 1
+							break
+						s.end_turn()
+					if turns >= MAX_TURNS:
+						push_error("Battle vs %s did not finish" % enemy.name)
+						failures += 1
+					roster_games += 1
+	print("Roster check: %d battles against every opponent" % roster_games)
 	print("Simulated %d battles: player(smart) %d, enemy %d, avg turns %.1f, failures %d" % [GAMES, wins[0], wins[1], float(total_turns) / GAMES, failures])
 	# Map sanity: every non-boss node must lead somewhere and every node above row 0 must be reachable.
 	for i in 200:
