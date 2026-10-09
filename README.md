@@ -38,7 +38,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 
 ## Content
 
-- **Trick cards** (beyond normal UNO):
+- **Trick cards** (beyond the basic number and action cards):
 
   | Card | Effect |
   | --- | --- |

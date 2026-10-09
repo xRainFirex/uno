@@ -93,7 +93,7 @@ func _show_how_to_play() -> void:
 	rt.custom_minimum_size = Vector2(920, 0)
 	rt.add_theme_font_size_override("normal_font_size", UIKit.fs(20))
 	rt.add_theme_font_size_override("bold_font_size", UIKit.fs(20))
-	rt.text = """[b][color=#f5c542]Battles[/color][/b]  Each battle is a one-on-one card duel using classic UNO-style rules. Match the top card by [b]colour[/b], [b]number[/b] or [b]symbol[/b]. Wilds go on anything. Empty your hand to win.
+	rt.text = """[b][color=#f5c542]Battles[/color][/b]  Each battle is a one-on-one card duel. Match the top card by [b]colour[/b], [b]number[/b] or [b]symbol[/b]. Wilds go on anything. Empty your hand to win.
 [b][color=#f5c542]Your own deck[/color][/b]  You draw from your personal deck, which grows as you collect cards. Your opponent draws from theirs.
 [b][color=#f5c542]Draw, then decide[/color][/b]  Click your deck (or press [b]Space[/b]) to draw. If the drawn card fits you may play it, or pass.
 [b][color=#f5c542]Shout DOS![/color][/b]  With two cards left, press [b]DOS![/b] (or [b]D[/b]) before you play, or you may get caught and draw 2. Catch your opponent when they forget!

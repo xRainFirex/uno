@@ -91,7 +91,7 @@ func rarity() -> Rarity:
 	return Rarity.RARE
 
 # points
-# DESCRIPTION: Classic UNO scoring value, used by the AI to decide what to dump first.
+# DESCRIPTION: Card point value, used by the AI to decide what to dump first.
 func points() -> int:
 	if type == Type.NUMBER:
 		return value
