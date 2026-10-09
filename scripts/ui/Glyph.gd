@@ -25,15 +25,34 @@ func _init(p_icon: String = "star", p_color: Color = Color.WHITE, p_size: float 
 func _draw() -> void:
 	Glyph.paint(self, icon, size / 2.0, minf(size.x, size.y) / 2.0, color)
 
+const PIXELS := 16
+const OUTLINE := Color(0.07, 0.05, 0.1)
+
+static var _cache := {}
+
 # paint
-# DESCRIPTION: Draws `icon` centred at `c` with radius `r` onto any CanvasItem.
+# DESCRIPTION: Draws `icon` centred at `c` with radius `r` onto any CanvasItem, as crisp pixel art.
+#              The icon is rasterised once into a 16x16 sprite (with outline) and cached per colour.
 static func paint(ci: CanvasItem, icon_name: String, c: Vector2, r: float, col: Color) -> void:
+	ci.draw_texture_rect(sprite(icon_name, col), Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false)
+
+static func sprite(icon_name: String, col: Color) -> ImageTexture:
+	var key := "%s|%s" % [icon_name, col.to_html()]
+	if not _cache.has(key):
+		var pc := PixelCanvas.new(PIXELS, PIXELS)
+		var c := Vector2(PIXELS, PIXELS) / 2.0
+		if icon_name.begins_with("text:"):
+			pc.draw_text_centered(icon_name.substr(5), c, 1 if icon_name.length() > 7 else 2, col)
+		else:
+			paint_shapes(pc, icon_name, c, PIXELS / 2.0 - 1.5, col)
+		pc.outline(OUTLINE)
+		_cache[key] = pc.texture()
+	return _cache[key]
+
+# paint_shapes
+# DESCRIPTION: The icon drawings themselves. `ci` is a PixelCanvas (or anything with draw_* calls).
+static func paint_shapes(ci, icon_name: String, c: Vector2, r: float, col: Color) -> void:
 	var dark := Color(0, 0, 0, 0.55)
-	if icon_name.begins_with("text:"):
-		var txt := icon_name.substr(5)
-		var fs := int(r * (1.1 if txt.length() <= 2 else 0.8))
-		UIKit.draw_text_centered(ci, UIKit.font_bold(), txt, c, fs, col, dark, maxi(2, int(r * 0.12)))
-		return
 	match icon_name:
 		"heart":
 			ci.draw_circle(c + Vector2(-r * 0.36, -r * 0.2), r * 0.44, col)
@@ -43,7 +62,7 @@ static func paint(ci: CanvasItem, icon_name: String, c: Vector2, r: float, col: 
 			ci.draw_circle(c, r * 0.85, col.darkened(0.25))
 			ci.draw_circle(c + Vector2(0, -r * 0.06), r * 0.8, col)
 			ci.draw_arc(c + Vector2(0, -r * 0.06), r * 0.58, 0, TAU, 32, col.darkened(0.25), maxf(1.5, r * 0.09), true)
-			UIKit.draw_text_centered(ci, UIKit.font_bold(), "$", c + Vector2(0, -r * 0.06), int(r * 0.95), col.darkened(0.45))
+			ci.draw_text_centered("$", c + Vector2(0, -r * 0.06), 1, col.darkened(0.45))
 		"sword":
 			for s in [-1.0, 1.0]:
 				var a := c + Vector2(-0.7 * s, -0.7) * r
@@ -74,7 +93,7 @@ static func paint(ci: CanvasItem, icon_name: String, c: Vector2, r: float, col: 
 			_flame(ci, c + Vector2(0, r * 0.25), r * 0.55, col.lightened(0.5))
 		"question":
 			ci.draw_circle(c, r * 0.85, col)
-			UIKit.draw_text_centered(ci, UIKit.font_bold(), "?", c, int(r * 1.3), dark.darkened(0.5))
+			ci.draw_text_centered("?", c, 1, Color(0.1, 0.08, 0.15))
 		"chest":
 			ci.draw_rect(Rect2(c + Vector2(-0.8, -0.2) * r, Vector2(1.6, 0.85) * r), col)
 			var lid := UIKit.ellipse_points(c + Vector2(0, -0.2) * r, Vector2(0.8, 0.5) * r, 0.0, 16, PI, TAU)
@@ -85,7 +104,7 @@ static func paint(ci: CanvasItem, icon_name: String, c: Vector2, r: float, col: 
 			ci.draw_circle(c + Vector2(0, r * 0.2), r * 0.66, col)
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-0.3, -0.35) * r, c + Vector2(0.3, -0.35) * r, c + Vector2(0.48, -0.8) * r, c + Vector2(-0.48, -0.8) * r]), col)
 			ci.draw_line(c + Vector2(-0.34, -0.38) * r, c + Vector2(0.34, -0.38) * r, dark, r * 0.12)
-			UIKit.draw_text_centered(ci, UIKit.font_bold(), "$", c + Vector2(0, r * 0.22), int(r * 0.8), dark.darkened(0.4))
+			ci.draw_text_centered("$", c + Vector2(0, r * 0.22), 1, col.darkened(0.5))
 		"cards":
 			var size := Vector2(0.95, 1.35) * r
 			ci.draw_set_transform(c + Vector2(-0.18, 0.05) * r, -0.25, Vector2.ONE)
@@ -161,10 +180,41 @@ static func paint(ci: CanvasItem, icon_name: String, c: Vector2, r: float, col: 
 				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-0.45, 0.35) * r, c + Vector2(0.45, 0.35) * r, c + t * r]), col)
 				ci.draw_circle(c + t * r, r * 0.14, col.lightened(0.3))
 			ci.draw_rect(Rect2(c + Vector2(-0.6, 0.3) * r, Vector2(1.2, 0.3) * r), col.darkened(0.3))
+		"pause":
+			ci.draw_rect(Rect2(c + Vector2(-0.7, -0.75) * r, Vector2(0.5, 1.5) * r), col)
+			ci.draw_rect(Rect2(c + Vector2(0.2, -0.75) * r, Vector2(0.5, 1.5) * r), col)
+		"swap":
+			draw_arrow(ci, c + Vector2(-0.4, 0.8) * r, c + Vector2(-0.4, -0.85) * r, col, r * 0.28)
+			draw_arrow(ci, c + Vector2(0.4, -0.8) * r, c + Vector2(0.4, 0.85) * r, col, r * 0.28)
+		"chain":
+			for off in [-1.0, 1.0]:
+				ci.draw_polyline(UIKit.ellipse_points(c + Vector2(off, -off) * r * 0.3, Vector2(0.55, 0.3) * r, -PI / 4.0, 16), col, r * 0.22)
+		"sigil":
+			var pts := PackedVector2Array([c + Vector2(0, -0.95) * r, c + Vector2(0.75, 0) * r, c + Vector2(0, 0.95) * r, c + Vector2(-0.75, 0) * r, c + Vector2(0, -0.95) * r])
+			ci.draw_polyline(pts, col, r * 0.16)
+			_star(ci, c, r * 0.55, col)
+		"wave":
+			for row in 2:
+				var pts := PackedVector2Array()
+				for i in 9:
+					var t := float(i) / 8.0
+					pts.append(c + Vector2(lerpf(-0.85, 0.85, t), -0.25 + row * 0.55 + sin(t * TAU) * 0.22) * r)
+				ci.draw_polyline(pts, col, r * 0.24)
+		"leaf":
+			var leaf := UIKit.ellipse_points(c, Vector2(0.85, 0.45) * r, -PI / 4.0, 20)
+			ci.draw_colored_polygon(leaf, col)
+			ci.draw_line(c + Vector2(-0.7, 0.7) * r, c + Vector2(0.45, -0.45) * r, col.darkened(0.4), r * 0.12)
+		"moon":
+			ci.draw_circle(c, r * 0.85, col)
+			ci.draw_circle(c + Vector2(0.4, -0.25) * r, r * 0.7, Color(0, 0, 0, 0))
+			for y in ci.height if ci is PixelCanvas else 0:
+				for x in ci.width:
+					if Vector2(x + 0.5, y + 0.5).distance_to(c + Vector2(0.4, -0.25) * r) <= r * 0.7:
+						ci.img.set_pixel(x, y, Color(0, 0, 0, 0))
 		_:
 			_star(ci, c, r, col)
 
-static func _flame(ci: CanvasItem, c: Vector2, r: float, col: Color) -> void:
+static func _flame(ci, c: Vector2, r: float, col: Color) -> void:
 	var pts := PackedVector2Array()
 	for i in 25:
 		var t := float(i) / 24.0 * TAU
@@ -175,7 +225,7 @@ static func _flame(ci: CanvasItem, c: Vector2, r: float, col: Color) -> void:
 		pts.append(c + Vector2(x, y) * r)
 	ci.draw_colored_polygon(pts, col)
 
-static func _star(ci: CanvasItem, c: Vector2, r: float, col: Color) -> void:
+static func _star(ci, c: Vector2, r: float, col: Color) -> void:
 	var pts := PackedVector2Array()
 	for i in 10:
 		var rad := r * (0.9 if i % 2 == 0 else 0.4)
@@ -185,7 +235,7 @@ static func _star(ci: CanvasItem, c: Vector2, r: float, col: Color) -> void:
 
 # draw_arrow
 # DESCRIPTION: Thick arrow with a triangular head, shared with the card renderer.
-static func draw_arrow(ci: CanvasItem, from: Vector2, to: Vector2, col: Color, width: float) -> void:
+static func draw_arrow(ci, from: Vector2, to: Vector2, col: Color, width: float) -> void:
 	var dir := (to - from).normalized()
 	var perp := Vector2(-dir.y, dir.x)
 	var head := width * 2.0

@@ -12,7 +12,8 @@ enum Type { NUMBER, SKIP, REVERSE, DRAW_TWO, WILD, WILD_DRAW_FOUR, DISCARD_ALL, 
 enum Enchant { NONE, GILDED, BARBED, HEALING }
 enum Rarity { COMMON, UNCOMMON, RARE }
 
-const COLOR_NAMES := ["Red", "Blue", "Green", "Yellow", "Wild"]
+# Suit names (the enum keeps RED/BLUE/GREEN/YELLOW internally).
+const COLOR_NAMES := ["Ember", "Tide", "Moss", "Dusk", "Wild"]
 const TYPE_NAMES := ["Number", "Skip", "Reverse", "Draw Two", "Wild", "Wild Draw Four", "Discard All", "Wild Swap", "Double Down", "Freeze", "Gift", "Wild Chain", "Wild Mirror"]
 const DOUBLE_DOWN_CAP := 6
 const GIFT_AMOUNT := 2
@@ -107,7 +108,7 @@ func color_name() -> String:
 	return COLOR_NAMES[card_color]
 
 # title
-# DESCRIPTION: Human-readable card name, e.g. "Blue 7" or "Wild Draw Four".
+# DESCRIPTION: Human-readable card name, e.g. "Tide 7" or "Wild Draw Four".
 func title() -> String:
 	var base: String
 	if type == Type.NUMBER:

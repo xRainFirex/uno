@@ -33,6 +33,8 @@ var _busy := false
 func _ready() -> void:
 	theme = UIKit.build_theme()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Crisp pixel art everywhere: every texture is scaled with nearest-neighbour filtering.
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 	_bg = ColorRect.new()
 	_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

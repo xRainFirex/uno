@@ -297,8 +297,8 @@ func _library() -> Dictionary:
 
 func _shrine() -> Dictionary:
 	return {
-		"title": "SHRINE OF COLOURS", "icon": "diamond", "color": Color(0.85, 0.85, 0.95),
-		"text": "Four candles burn red, blue, green and yellow before a silent altar.",
+		"title": "SHRINE OF THE ELEMENTS", "icon": "diamond", "color": Color(0.85, 0.85, 0.95),
+		"text": "Four candles burn with ember, tide, moss and dusk before a silent altar.",
 		"choices": [
 			{"label": "Offer your blood  (lose 6 max HP, gain a random charm)", "enabled": not Charms.random_unowned(RunState.charms, 1).is_empty(), "action": func():
 				var id: String = Charms.random_unowned(RunState.charms, 1)[0]

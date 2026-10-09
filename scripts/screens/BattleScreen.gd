@@ -172,8 +172,8 @@ func _build_ui() -> void:
 	_log.bbcode_enabled = true
 	_log.scroll_following = true
 	_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_log.add_theme_font_size_override("normal_font_size", 16)
-	_log.add_theme_font_size_override("bold_font_size", 16)
+	_log.add_theme_font_size_override("normal_font_size", UIKit.fs(16))
+	_log.add_theme_font_size_override("bold_font_size", UIKit.fs(16))
 	lcol.add_child(_log)
 
 	# Action buttons
@@ -192,7 +192,7 @@ func _build_ui() -> void:
 			col = col.darkened(0.2)
 		elif st == "disabled":
 			col = Color(0.25, 0.12, 0.13)
-		var sb := UIKit.stylebox(col, 75, 6, UIKit.GOLD if st != "disabled" else Color(0.35, 0.3, 0.2), 12 if st != "disabled" else 0)
+		var sb := UIKit.stylebox(col, 0, 6, UIKit.GOLD if st != "disabled" else Color(0.35, 0.3, 0.2), 12 if st != "disabled" else 0)
 		_dos_button.add_theme_stylebox_override(st, sb)
 	_dos_button.add_theme_font_override("font", UIKit.font_display())
 	_dos_button.add_theme_font_size_override("font_size", 40)
@@ -210,7 +210,7 @@ func _build_ui() -> void:
 	add_child(_pass_button)
 
 	_catch_button = UIKit.button("CATCH!  +2", "DangerButton", Vector2(220, 64))
-	_catch_button.add_theme_font_size_override("font_size", 28)
+	_catch_button.add_theme_font_size_override("font_size", UIKit.fs(28))
 	_catch_button.visible = false
 	_catch_button.pressed.connect(func():
 		if _catch_open:
@@ -973,9 +973,26 @@ class ActiveColorRing extends Control:
 	func _draw() -> void:
 		var c := size / 2.0
 		var pulse := 0.5 + 0.5 * sin(_t * 2.5)
-		draw_circle(c, 140.0, Color(_color, 0.07 + 0.04 * pulse))
-		draw_arc(c, 135.0, 0, TAU, 96, Color(_color, 0.35 + 0.25 * pulse), 6.0, true)
-		draw_arc(c, 146.0, 0, TAU, 96, Color(_color, 0.12), 3.0, true)
+		# Pixel frame around the pile in the active colour, with four marker blocks circling it.
+		var outer := Rect2(c - Vector2(125, 140), Vector2(250, 280))
+		draw_rect(outer, Color(_color, 0.07 + 0.04 * pulse))
+		draw_rect(outer, Color(_color, 0.4 + 0.25 * pulse), false, 6.0)
+		draw_rect(outer.grow(10), Color(_color, 0.12), false, 4.0)
 		for i in 4:
-			var a := _t * 0.4 + i * PI / 2.0
-			draw_circle(c + Vector2(cos(a), sin(a)) * 135.0, 7.0, _color)
+			var t := fmod(_t * 0.15 + i * 0.25, 1.0)
+			var p := _perimeter_point(outer, t)
+			draw_rect(Rect2(p - Vector2(7, 7), Vector2(14, 14)), _color)
+
+	func _perimeter_point(r: Rect2, t: float) -> Vector2:
+		var per := 2.0 * (r.size.x + r.size.y)
+		var d := t * per
+		if d < r.size.x:
+			return r.position + Vector2(d, 0)
+		d -= r.size.x
+		if d < r.size.y:
+			return r.position + Vector2(r.size.x, d)
+		d -= r.size.y
+		if d < r.size.x:
+			return r.end - Vector2(d, 0)
+		d -= r.size.x
+		return Vector2(r.position.x, r.end.y - d)

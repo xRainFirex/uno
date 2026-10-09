@@ -34,16 +34,12 @@ func _draw() -> void:
 	var def := Charms.get_def(charm_id)
 	var col: Color = def.color
 	var c := size / 2.0
-	var r := minf(size.x, size.y) / 2.0 * (1.06 if _hover else 1.0)
-	var hex := PackedVector2Array()
-	for i in 7:
-		var a := PI / 6.0 + i * TAU / 6.0
-		hex.append(c + Vector2(cos(a), sin(a)) * r * 0.98)
-	draw_colored_polygon(hex, Color(0.06, 0.08, 0.11))
-	draw_polyline(hex, col, maxf(2.0, r * 0.09), true)
-	var inner := PackedVector2Array()
-	for i in 7:
-		var a := PI / 6.0 + i * TAU / 6.0
-		inner.append(c + Vector2(cos(a), sin(a)) * r * 0.8)
-	draw_colored_polygon(inner, Color(col, 0.16))
-	Glyph.paint(self, def.icon, c, r * 0.55, col)
+	var r := minf(size.x, size.y) / 2.0
+	# Square pixel badge: ink rim, coloured border, dark well, icon.
+	var grow := 2.0 if _hover else 0.0
+	var box := Rect2(c - Vector2(r, r) - Vector2(grow, grow), Vector2(r, r) * 2.0 + Vector2(grow, grow) * 2.0)
+	draw_rect(box, PixelCard.INK)
+	draw_rect(box.grow(-2), col)
+	draw_rect(box.grow(-5), Color(0.06, 0.08, 0.11))
+	draw_rect(box.grow(-5), Color(col, 0.16))
+	Glyph.paint(self, def.icon, c, r * 0.68, col)

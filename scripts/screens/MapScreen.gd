@@ -146,12 +146,12 @@ func _draw_paths() -> void:
 			var travelled: bool = RunState.visited.has(n.id) and RunState.visited.has(nid)
 			var open: bool = n.id == RunState.current_node and _available.has(nid)
 			if travelled:
-				_canvas.draw_line(from, to, Color(UIKit.GOLD, 0.85), 5.0, true)
+				_canvas.draw_line(from, to, Color(UIKit.GOLD, 0.85), 6.0)
 			elif open:
 				var a2 := 0.55 + 0.35 * sin(_time * 4.0)
-				_canvas.draw_dashed_line(from, to, Color(1, 1, 1, a2), 4.0, 12.0, true)
+				_canvas.draw_dashed_line(from, to, Color(1, 1, 1, a2), 5.0, 10.0)
 			else:
-				_canvas.draw_dashed_line(from, to, Color(1, 1, 1, 0.14), 3.0, 10.0, true)
+				_canvas.draw_dashed_line(from, to, Color(1, 1, 1, 0.14), 4.0, 8.0)
 
 func _on_node_pressed(id: int) -> void:
 	if _locked or not _available.has(id):
@@ -217,17 +217,22 @@ class MapNodeView extends Control:
 				ring = Color(UIKit.GOLD, 0.6)
 				icon_col = Color(col, 0.45)
 			"available":
-				draw_circle(c, r * 1.25, Color(col, 0.12 + 0.08 * sin(_t * 4.0)))
+				var g := r * (1.25 + 0.06 * sin(_t * 4.0))
+				draw_rect(Rect2(c - Vector2(g, g), Vector2(g, g) * 2.0), Color(col, 0.12 + 0.08 * sin(_t * 4.0)))
 		if (node.type == "elite" or node.type == "boss") and state != "visited":
 			# Dangerous nodes pulse so you can see them coming from afar.
 			var pulse := 0.5 + 0.5 * sin(_t * 3.0)
-			draw_circle(c, r * (1.18 + 0.08 * pulse), Color(col, 0.10 + 0.12 * pulse))
-		draw_circle(c, r, bg)
-		draw_arc(c, r - 2.0, 0, TAU, 48, ring, 4.0 if state != "locked" else 2.5, true)
-		Glyph.paint(self, style.icon, c, r * 0.52, icon_col)
+			var g2 := r * (1.18 + 0.08 * pulse)
+			draw_rect(Rect2(c - Vector2(g2, g2), Vector2(g2, g2) * 2.0), Color(col, 0.10 + 0.12 * pulse))
+		# Square pixel tile: ink rim, coloured border, dark well, pixel icon.
+		var box := Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0)
+		draw_rect(box, PixelCard.INK)
+		draw_rect(box.grow(-3), ring)
+		draw_rect(box.grow(-7), bg)
+		Glyph.paint(self, style.icon, c, r * 0.62, icon_col)
 		if state == "visited":
-			draw_line(c + Vector2(-r * 0.3, 0), c + Vector2(-r * 0.05, r * 0.25), UIKit.GOLD, 5.0, true)
-			draw_line(c + Vector2(-r * 0.05, r * 0.25), c + Vector2(r * 0.35, -r * 0.25), UIKit.GOLD, 5.0, true)
+			draw_line(c + Vector2(-r * 0.3, 0), c + Vector2(-r * 0.05, r * 0.25), UIKit.GOLD, 6.0)
+			draw_line(c + Vector2(-r * 0.05, r * 0.25), c + Vector2(r * 0.35, -r * 0.25), UIKit.GOLD, 6.0)
 		if state == "current":
 			var bob := sin(_t * 3.0) * 4.0
 			var tip := c + Vector2(0, -r - 8 + bob)

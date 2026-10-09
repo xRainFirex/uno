@@ -47,7 +47,7 @@ func _ready() -> void:
 	buttons.custom_minimum_size.x = 340
 	col.add_child(buttons)
 	var start := UIKit.button("NEW RUN", "AccentButton", Vector2(0, 64))
-	start.add_theme_font_size_override("font_size", 28)
+	start.add_theme_font_size_override("font_size", UIKit.fs(28))
 	start.pressed.connect(func(): router.show_deck_select())
 	buttons.add_child(start)
 	var how := UIKit.button("HOW TO PLAY")
@@ -91,8 +91,8 @@ func _show_how_to_play() -> void:
 	rt.bbcode_enabled = true
 	rt.fit_content = true
 	rt.custom_minimum_size = Vector2(920, 0)
-	rt.add_theme_font_size_override("normal_font_size", 20)
-	rt.add_theme_font_size_override("bold_font_size", 20)
+	rt.add_theme_font_size_override("normal_font_size", UIKit.fs(20))
+	rt.add_theme_font_size_override("bold_font_size", UIKit.fs(20))
 	rt.text = """[b][color=#f5c542]Battles[/color][/b]  Each battle is a one-on-one card duel using classic UNO-style rules. Match the top card by [b]colour[/b], [b]number[/b] or [b]symbol[/b]. Wilds go on anything. Empty your hand to win.
 [b][color=#f5c542]Your own deck[/color][/b]  You draw from your personal deck, which grows as you collect cards. Your opponent draws from theirs.
 [b][color=#f5c542]Draw, then decide[/color][/b]  Click your deck (or press [b]Space[/b]) to draw. If the drawn card fits you may play it, or pass.

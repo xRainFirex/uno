@@ -1,6 +1,16 @@
 # DOS: An Uno Roguelike
 
-A deck-building roguelike played with UNO-style rules, made in **Godot 4.5**. Every card, icon, portrait and sound effect is generated in code, so the project has no art or audio assets.
+A deck-building roguelike card game with shedding-style rules (match colour or number, empty your hand to win), made in **Godot 4.5**. Every card, icon, portrait and sound effect is generated in code. The only bundled assets are two open-licensed pixel fonts.
+
+## Art style
+
+The cards are an original pixel-art design rather than an imitation of any commercial card game:
+- **Four elemental suits** fill the four colour slots: **Ember** (orange-red, flame), **Tide** (azure, wave), **Moss** (green, leaf) and **Dusk** (violet, moon). Each has its own corner emblem.
+- **Cards are drawn at 26×38 pixels and shown at 5×.** Each has a two-tone bevelled frame, an octagonal crest plate, chunky bitmap numerals and pixel icons for every action.
+- **Wild cards** have a banded four-element body with a gem crest.
+- **The card back** is a gold lattice with the game's own sigil.
+
+Everything is generated in code: `PixelCanvas` is a tiny rasteriser, `PixelCard` draws the cards, and `Glyph` draws the icons. The UI uses two open-licensed pixel fonts, **Silkscreen** (headings) and **Jersey 10** (body text), both under the SIL Open Font License (see `assets/fonts/`).
 
 ## Running
 
@@ -78,7 +88,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 scenes/Main.tscn            root scene
 scripts/autoload/           RunState (run + meta state), Sfx (synthesised sounds)
 scripts/core/               rules and data: CardData, CardFactory, BattleState, EnemyAI, Enemies, Charms, MapGen
-scripts/ui/                 UIKit (theme/palette), CardView, Glyph, CharmIcon, Avatar, Hud, DeckViewer
+scripts/ui/                 UIKit (theme/palette), PixelCanvas, PixelCard, CardView, Glyph, CharmIcon, Avatar, Hud, DeckViewer
 scripts/screens/            Main router and every screen (Title, Map, Battle, Reward, Shop, Rest, Event, End)
 shaders/felt.gdshader       card-table background
 tests/sim_battles.gd        headless rules test

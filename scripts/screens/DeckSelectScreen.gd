@@ -60,7 +60,7 @@ func _ready() -> void:
 
 func _arrow_button(text: String, step: int) -> Button:
 	var b := UIKit.button(text, "", Vector2(76, 120))
-	b.add_theme_font_size_override("font_size", 44)
+	b.add_theme_font_size_override("font_size", UIKit.fs(44))
 	b.tooltip_text = "Previous deck" if step < 0 else "Next deck"
 	b.pressed.connect(func(): _step(step))
 	return b
