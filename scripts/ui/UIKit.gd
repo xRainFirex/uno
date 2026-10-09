@@ -109,6 +109,7 @@ static func build_theme() -> Theme:
 	t.set_color("font_hover_color", "AccentButton", Color(0.08, 0.06, 0.02))
 	t.set_color("font_pressed_color", "AccentButton", Color(0.2, 0.16, 0.06))
 	t.set_color("font_focus_color", "AccentButton", Color(0.13, 0.1, 0.04))
+	t.set_color("font_disabled_color", "AccentButton", Color(0.95, 0.9, 0.75, 0.75))
 
 	t.add_type("DangerButton")
 	t.set_type_variation("DangerButton", "Button")

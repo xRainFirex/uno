@@ -24,7 +24,7 @@ var current_node := -1
 var visited: Array[int] = []
 var removal_cost := 50
 var stats := {}
-var meta := {"runs": 0, "wins": 0, "best_floor": 0, "unlocked_decks": ["classic"], "deck_wins": {}}
+var meta := {"runs": 0, "wins": 0, "best_floor": 0, "unlocked_decks": ["classic"], "deck_wins": {}, "deck_stats": {}}
 var deck_id := "classic"
 
 # Settings (saved with meta)
@@ -51,6 +51,7 @@ func new_run(p_deck_id: String = "classic") -> void:
 	removal_cost = 50
 	stats = {"battles_won": 0, "elites": 0, "bosses": 0, "cards_played": 0, "damage_taken": 0, "gold_earned": 0, "floor": 0}
 	meta.runs += 1
+	deck_stats(deck_id).runs += 1
 	save_meta()
 	generate_map()
 	changed.emit()
@@ -153,6 +154,11 @@ func price_multiplier() -> float:
 # DESCRIPTION: Records the result. Winning with a deck unlocks the next one; returns its id ("" if none).
 func end_run(victory: bool) -> String:
 	in_run = false
+	var ds := deck_stats(deck_id)
+	ds.wins += 1 if victory else 0
+	ds.losses += 0 if victory else 1
+	ds.best_floor = maxi(int(ds.best_floor), floor_number())
+	ds.battles_won += int(stats.get("battles_won", 0))
 	var unlocked := ""
 	if victory:
 		meta.wins += 1
@@ -163,6 +169,13 @@ func end_run(victory: bool) -> String:
 			unlocked = next
 	save_meta()
 	return unlocked
+
+# deck_stats
+# DESCRIPTION: Lifetime record for one starting deck (created on first use).
+func deck_stats(id: String) -> Dictionary:
+	if not meta.deck_stats.has(id):
+		meta.deck_stats[id] = {"runs": 0, "wins": 0, "losses": 0, "best_floor": 0, "battles_won": 0}
+	return meta.deck_stats[id]
 
 func is_deck_unlocked(id: String) -> bool:
 	return meta.unlocked_decks.has(id)

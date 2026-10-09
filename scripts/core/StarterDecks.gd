@@ -24,7 +24,7 @@ const DATA := {
 	},
 	"monochrome": {
 		"name": "Monochrome", "icon": "diamond", "color": Color(0.95, 0.35, 0.3),
-		"desc": "A single colour: 1-9, a Skip, a Reverse and one Wild to steer back home. Just 12 cards.",
+		"desc": "A single colour (random each run): 1-9, a Skip, a Reverse and one Wild to steer back home. Just 12 cards.",
 		"perk": "Every card chains into the next while the colour is yours. Lose it and you're in trouble.",
 		"hp": 0, "gold": 0, "charms": [],
 	},

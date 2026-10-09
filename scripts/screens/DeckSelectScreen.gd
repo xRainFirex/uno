@@ -1,21 +1,24 @@
 # ==========================================
 # FILE: DeckSelectScreen.gd
-# DESCRIPTION: Pick a starting deck before a run. Locked decks show what unlocks them.
+# DESCRIPTION: Pick a starting deck before a run. Shows one deck at a time (arrows / arrow keys to browse)
+#              with every card in it, its perk, and your lifetime record with that deck.
 # VERSION: v0.100
 # ==========================================
 class_name DeckSelectScreen
 extends Control
 
+const PREVIEW_SIZE := Vector2(820, 560)
+
 var router: Node
-var _selected := ""
-var _buttons := {}
+var _index := 0
+var _panel_slot: CenterContainer
+var _dots: HBoxContainer
 var _start: Button
-var _info: Label
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_selected = RunState.deck_id if RunState.is_deck_unlocked(RunState.deck_id) else "classic"
+	_index = maxi(0, StarterDecks.ORDER.find(RunState.deck_id))
 
 	var col := UIKit.vbox(14)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -23,93 +26,173 @@ func _ready() -> void:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(col)
 
-	col.add_child(UIKit.title("CHOOSE YOUR DECK", 60, UIKit.GOLD))
-	col.add_child(UIKit.label("Win a run with a deck to unlock the next one.", 20, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
-	col.add_child(UIKit.spacer(0, 8))
+	col.add_child(UIKit.title("CHOOSE YOUR DECK", 56, UIKit.GOLD))
+	col.add_child(UIKit.label("Win a run with a deck to unlock the next one.", 19, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
 
-	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 20)
-	grid.add_theme_constant_override("v_separation", 20)
-	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(grid)
-	for id in StarterDecks.ORDER:
-		var b := _deck_button(id)
-		grid.add_child(b)
-		_buttons[id] = b
-
-	_info = UIKit.label("", 19, UIKit.TEXT, true, HORIZONTAL_ALIGNMENT_CENTER)
-	col.add_child(_info)
-
-	var row := UIKit.hbox(16)
+	var row := UIKit.hbox(18)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(row)
-	var back := UIKit.button("BACK", "GhostButton", Vector2(180, 60))
-	back.pressed.connect(func(): router.show_title())
-	row.add_child(back)
-	var view := UIKit.button("VIEW CARDS", "", Vector2(200, 60))
-	view.pressed.connect(func():
-		var cards := StarterDecks.build(_selected)
-		router.open_deck(StarterDecks.get_def(_selected).name.to_upper() + " DECK", cards))
-	row.add_child(view)
-	_start = UIKit.button("START RUN", "AccentButton", Vector2(260, 60))
-	_start.pressed.connect(func(): router.start_run(_selected))
-	row.add_child(_start)
-	_select(_selected)
+	var prev := _arrow_button("<", -1)
+	row.add_child(prev)
+	_panel_slot = CenterContainer.new()
+	_panel_slot.custom_minimum_size = Vector2(1500, 640)
+	row.add_child(_panel_slot)
+	var next := _arrow_button(">", 1)
+	row.add_child(next)
 
-# _deck_button
-# DESCRIPTION: A card-like tile showing the deck's icon, description, perk and win count (or how to unlock it).
-func _deck_button(id: String) -> Button:
-	var def := StarterDecks.get_def(id)
-	var unlocked := RunState.is_deck_unlocked(id)
-	var b := Button.new()
-	b.custom_minimum_size = Vector2(400, 250)
-	b.focus_mode = Control.FOCUS_NONE
-	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_FORBIDDEN
-	b.toggle_mode = true
-	var col: Color = def.color if unlocked else Color(0.4, 0.42, 0.46)
-	b.add_theme_stylebox_override("pressed", UIKit.stylebox(UIKit.PANEL_LIGHT.lightened(0.05), 14, 4, UIKit.GOLD, 12))
-	var inner := UIKit.vbox(6)
-	inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	inner.offset_left = 18
-	inner.offset_right = -18
-	inner.offset_top = 14
-	inner.offset_bottom = -12
-	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(inner)
-	var head := UIKit.hbox(12)
-	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	head.add_child(Glyph.new(def.icon if unlocked else "text:?", col, 44))
-	var name_col := UIKit.vbox(0)
-	name_col.add_child(UIKit.label(def.name.to_upper(), 26, col.lightened(0.2), true))
-	var count := StarterDecks.build(id).size()
-	var wins := int(RunState.meta.deck_wins.get(id, 0))
-	var sub := "%d cards" % count + ("   ·   won %d×" % wins if wins > 0 else "")
-	name_col.add_child(UIKit.label(sub, 15, UIKit.TEXT_MUTED, true))
-	head.add_child(name_col)
-	inner.add_child(head)
-	var desc_text: String = def.desc if unlocked else "Locked. Win a run with the %s deck to unlock." % StarterDecks.get_def(StarterDecks.ORDER[StarterDecks.ORDER.find(id) - 1]).name
-	var desc := UIKit.label(desc_text, 16, UIKit.TEXT if unlocked else UIKit.TEXT_MUTED)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size.x = 360
-	inner.add_child(desc)
-	if unlocked:
-		var perk := UIKit.label(def.perk, 16, UIKit.GOLD)
-		perk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		perk.custom_minimum_size.x = 360
-		inner.add_child(perk)
-	for c in inner.find_children("*", "Control", true, false):
-		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.disabled = not unlocked
-	b.pressed.connect(func(): _select(id))
+	_dots = UIKit.hbox(10)
+	_dots.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(_dots)
+
+	var buttons := UIKit.hbox(16)
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(buttons)
+	var back := UIKit.button("BACK", "GhostButton", Vector2(200, 60))
+	back.pressed.connect(func(): router.show_title())
+	buttons.add_child(back)
+	_start = UIKit.button("START RUN", "AccentButton", Vector2(280, 60))
+	_start.pressed.connect(func():
+		var id: String = StarterDecks.ORDER[_index]
+		if RunState.is_deck_unlocked(id):
+			router.start_run(id))
+	buttons.add_child(_start)
+	_show()
+
+func _arrow_button(text: String, step: int) -> Button:
+	var b := UIKit.button(text, "", Vector2(76, 120))
+	b.add_theme_font_size_override("font_size", 44)
+	b.tooltip_text = "Previous deck" if step < 0 else "Next deck"
+	b.pressed.connect(func(): _step(step))
 	return b
 
-func _select(id: String) -> void:
-	if not RunState.is_deck_unlocked(id):
-		return
-	_selected = id
-	for k in _buttons:
-		(_buttons[k] as Button).set_pressed_no_signal(k == id)
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_left"):
+		_step(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right"):
+		_step(1)
+		get_viewport().set_input_as_handled()
+
+func _step(step: int) -> void:
+	_index = posmod(_index + step, StarterDecks.ORDER.size())
+	Sfx.play("card")
+	_show()
+
+# _show
+# DESCRIPTION: Rebuilds the panel for the current deck.
+func _show() -> void:
+	for c in _panel_slot.get_children():
+		c.queue_free()
+	var id: String = StarterDecks.ORDER[_index]
 	var def := StarterDecks.get_def(id)
-	var hp := RunState.START_HP + int(def.hp)
-	_info.text = "%s  ·  %d HP  ·  %d gold" % [def.name, hp, RunState.START_GOLD + int(def.gold)]
+	var unlocked := RunState.is_deck_unlocked(id)
+	var accent: Color = def.color if unlocked else Color(0.45, 0.47, 0.52)
+
+	var panel := UIKit.panel(22)
+	panel.custom_minimum_size = Vector2(1460, 600)
+	_panel_slot.add_child(panel)
+	var body := UIKit.hbox(34)
+	panel.add_child(body)
+
+	# Left: name, description, perk, starting stats and lifetime record.
+	var info := UIKit.vbox(10)
+	info.custom_minimum_size.x = 520
+	body.add_child(info)
+	var head := UIKit.hbox(16)
+	head.add_child(Glyph.new(def.icon if unlocked else "text:?", accent, 64))
+	var names := UIKit.vbox(0)
+	names.add_child(UIKit.label("DECK %d OF %d" % [_index + 1, StarterDecks.ORDER.size()], 15, UIKit.TEXT_MUTED, true))
+	names.add_child(UIKit.title(def.name.to_upper(), 46, accent.lightened(0.15)))
+	names.get_child(1).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	head.add_child(names)
+	info.add_child(head)
+
+	if unlocked:
+		info.add_child(_wrapped(def.desc, 19, UIKit.TEXT))
+		info.add_child(_wrapped(def.perk, 19, UIKit.GOLD))
+		var cards := StarterDecks.build(id)
+		info.add_child(UIKit.label("%d cards   ·   %d HP   ·   %d gold" % [cards.size(), RunState.START_HP + int(def.hp), RunState.START_GOLD + int(def.gold)], 18, UIKit.TEXT_MUTED, true))
+	else:
+		var prev_name: String = StarterDecks.get_def(StarterDecks.ORDER[_index - 1]).name
+		info.add_child(_wrapped("Locked. Win a run with the %s deck to unlock it." % prev_name, 20, UIKit.TEXT_MUTED))
+	info.add_child(UIKit.spacer(0, 6))
+	info.add_child(UIKit.label("YOUR RECORD", 16, UIKit.TEXT_MUTED, true))
+	info.add_child(_stats_grid(id))
+
+	# Right: every card in the deck, laid out in a grid.
+	var preview := Control.new()
+	preview.custom_minimum_size = PREVIEW_SIZE
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(preview)
+	_fill_preview(preview, StarterDecks.build(id), unlocked)
+
+	# Dots
+	for c in _dots.get_children():
+		c.queue_free()
+	for i in StarterDecks.ORDER.size():
+		var dot := Panel.new()
+		dot.custom_minimum_size = Vector2(14, 14)
+		var on := i == _index
+		var col := UIKit.GOLD if on else (Color(1, 1, 1, 0.35) if RunState.is_deck_unlocked(StarterDecks.ORDER[i]) else Color(1, 1, 1, 0.12))
+		dot.add_theme_stylebox_override("panel", UIKit.stylebox(col, 7))
+		_dots.add_child(dot)
+
+	_start.disabled = not unlocked
+	_start.text = "START RUN" if unlocked else "LOCKED"
+
+func _wrapped(text: String, size: int, col: Color) -> Label:
+	var l := UIKit.label(text, size, col)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 500
+	return l
+
+func _stats_grid(id: String) -> GridContainer:
+	var st: Dictionary = RunState.meta.deck_stats.get(id, {})
+	var runs := int(st.get("runs", 0))
+	var wins := int(st.get("wins", 0))
+	var losses := int(st.get("losses", 0))
+	var rate := "-" if wins + losses == 0 else "%d%%" % int(round(100.0 * wins / (wins + losses)))
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 26)
+	grid.add_theme_constant_override("v_separation", 6)
+	var rows := [
+		["Runs", str(runs)], ["Win rate", rate],
+		["Wins", str(wins)], ["Best floor", str(int(st.get("best_floor", 0)))],
+		["Losses", str(losses)], ["Battles won", str(int(st.get("battles_won", 0)))],
+	]
+	for r in rows:
+		grid.add_child(UIKit.label(r[0], 18, UIKit.TEXT_MUTED))
+		grid.add_child(UIKit.label(r[1], 18, UIKit.TEXT, true))
+	return grid
+
+# _fill_preview
+# DESCRIPTION: Lays every card out in rows, shrinking them so the whole deck fits the preview area.
+func _fill_preview(area: Control, cards: Array, face_up: bool) -> void:
+	cards.sort_custom(func(a, b): return a.sort_key() < b.sort_key())
+	var n := cards.size()
+	var gap := 8.0
+	var best_scale := 0.0
+	var best_cols := 1
+	for cols in range(1, n + 1):
+		var rows := ceili(float(n) / cols)
+		var sx := (PREVIEW_SIZE.x - gap * (cols - 1)) / (cols * CardView.CARD_SIZE.x)
+		var sy := (PREVIEW_SIZE.y - gap * (rows - 1)) / (rows * CardView.CARD_SIZE.y)
+		var s := minf(minf(sx, sy), 0.9)
+		if s > best_scale:
+			best_scale = s
+			best_cols = cols
+	var cell := CardView.CARD_SIZE * best_scale
+	var rows_used := ceili(float(n) / best_cols)
+	var total := Vector2(best_cols * cell.x + (best_cols - 1) * gap, rows_used * cell.y + (rows_used - 1) * gap)
+	var origin := (PREVIEW_SIZE - total) / 2.0
+	for i in n:
+		var v := CardView.new(cards[i], face_up)
+		v.scale = Vector2(best_scale, best_scale)
+		var cell_pos := origin + Vector2((i % best_cols) * (cell.x + gap), (i / best_cols) * (cell.y + gap))
+		# CardView scales around its centre, so offset by the shrinkage.
+		v.position = cell_pos - CardView.CARD_SIZE * (1.0 - best_scale) / 2.0
+		v.interactive = face_up
+		v.hover_lift = 0.0
+		v.hover_grow = 0.04 / best_scale
+		area.add_child(v)
