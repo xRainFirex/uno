@@ -1,3 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+# Editor scene backups
+*.tmp
+# Local test harness scratch files
+tests/_*
