@@ -1,4 +1,4 @@
-# DOS: An Uno Roguelike
+# DOS: A Card Roguelike
 
 A deck-building roguelike card game with shedding-style rules (match colour or number, empty your hand to win), made in **Godot 4.5**. Every card, icon, portrait and sound effect is generated in code. The only bundled assets are two open-licensed pixel fonts.
 
