@@ -686,6 +686,9 @@ func _loop() -> void:
 	while not _finished and is_inside_tree():
 		var side := state.current
 		var start := state.begin_turn(side)
+		if state.total_turns() == BattleState.TURN_WARNING:
+			_float_text("%d TURNS LEFT!" % (BattleState.TURN_LIMIT - BattleState.TURN_WARNING), _center() + Vector2(0, -120), UIKit.DANGER, 48)
+			_log_line("[color=#e5484d][b]Time is running out![/b][/color] At turn %d the smaller hand wins." % BattleState.TURN_LIMIT)
 		for t in start.texts:
 			_float_text(t, _center() + Vector2(0, -120), UIKit.GOLD, 46)
 		if start.color_shift >= 0:
@@ -904,6 +907,8 @@ func _finish(winner: int) -> void:
 		RunState.gain_gold(gold)
 		col.add_child(UIKit.title("VICTORY", 84, UIKit.GOLD))
 		var why := "%s went BUST holding %d cards!" % [enemy.name, state.hands[E].size()] if bust else "You emptied your hand. %s was left holding %d card%s." % [enemy.name, leftover, "" if leftover == 1 else "s"]
+		if state.time_up() and not state.hands[P].is_empty():
+			why = "Time! You held fewer cards than %s when the clock ran out." % enemy.name
 		col.add_child(UIKit.label(why, 20, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
 		var gl := UIKit.hbox(10)
 		gl.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -923,6 +928,8 @@ func _finish(winner: int) -> void:
 		_shake(18.0)
 		col.add_child(UIKit.title("DEFEAT", 84, UIKit.DANGER))
 		var lost_why := "You went BUST holding %d cards!" % held if held >= BattleState.BUST_LIMIT else "%s emptied their hand first. You were holding %d card%s." % [enemy.name, held, "" if held == 1 else "s"]
+		if state.time_up() and not state.hands[E].is_empty() and held < BattleState.BUST_LIMIT:
+			lost_why = "Time! You were holding %d cards, more than %s, when the clock ran out." % [held, enemy.name]
 		col.add_child(UIKit.label(lost_why, 20, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
 		var hl := UIKit.hbox(10)
 		hl.alignment = BoxContainer.ALIGNMENT_CENTER

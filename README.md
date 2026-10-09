@@ -8,6 +8,8 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 
 ## How a run works
 
+- **Starting decks.** Choose a deck before each run. Winning a run with a deck unlocks the next one: Classic → Standard → Monochrome → Two-Tone → Trickster → High Roller. Each deck has its own cards and a perk, such as extra HP, a starting charm or extra gold.
+
 - **Map.** Each of the three acts is a 13-floor branching map that scrolls, with the boss at the top. Most floors are battles, events and elites (red skulls, tougher opponents that drop a charm). Floor 9 is mostly elites. Specials are rare and spaced out, so on any route you'll find at most 2 shops, at most 2 rest sites (one is always the campfire before the boss) and exactly 1 treasure, and never two in a row.
 - **Battles.** Each battle is a one-on-one card duel. Match the top card by colour, number or symbol. You draw from **your own deck**, which you grow and refine over the run, and the opponent draws from theirs.
 - **Losing hurts.** If the opponent empties their hand first, you take damage for each card left in your hand and must replay the same battle. You can't move on until you win. At 0 HP the run is over.
@@ -41,6 +43,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 
   From Act I, elites and bosses carry some trick cards (except Wild Swap and Discard All), and from Act II regular opponents do too. The count grows each act.
 - **Bust:** anyone holding 25 cards loses the battle immediately.
+- **Time limit:** if a battle reaches 200 turns, the smaller hand wins. This stops rare stalemates where both sides keep feeding each other draw cards. A warning appears 20 turns before the limit.
 - **Enchantments:** *Gilded* (+3 gold when played), *Barbed* (opponent draws 1) and *Healing* (+2 HP). You get these at campfires, from events, and sometimes on reward cards.
 - **23 charms:** passive powers such as *Prism*, *Seer's Eye*, *Spyglass*, *Phoenix Feather* and *Megaphone*. Eight of them build around trick cards:
 

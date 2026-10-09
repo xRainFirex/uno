@@ -8,6 +8,7 @@ extends Control
 
 var router: Node
 var victory := false
+var unlocked_deck := ""
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -25,6 +26,14 @@ func _ready() -> void:
 	col.add_child(UIKit.title("YOU BEAT THE HOUSE" if victory else "RUN OVER", 72, UIKit.GOLD if victory else UIKit.DANGER))
 	var flavour := "The Dealer folds. The House of DOS is yours." if victory else "Your luck ran out on floor %d." % RunState.floor_number()
 	col.add_child(UIKit.label(flavour, 22, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
+	col.add_child(UIKit.label("Deck: %s" % StarterDecks.get_def(RunState.deck_id).name, 18, UIKit.TEXT_MUTED, true, HORIZONTAL_ALIGNMENT_CENTER))
+	if unlocked_deck != "":
+		var def := StarterDecks.get_def(unlocked_deck)
+		var unlock := UIKit.hbox(12)
+		unlock.alignment = BoxContainer.ALIGNMENT_CENTER
+		unlock.add_child(Glyph.new(def.icon, def.color, 40))
+		unlock.add_child(UIKit.label("NEW DECK UNLOCKED: %s" % def.name.to_upper(), 24, UIKit.GOLD, true))
+		col.add_child(unlock)
 	col.add_child(UIKit.spacer(0, 10))
 
 	var grid := GridContainer.new()
@@ -61,7 +70,7 @@ func _ready() -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(buttons)
 	var again := UIKit.button("NEW RUN", "AccentButton", Vector2(240, 60))
-	again.pressed.connect(func(): router.start_run())
+	again.pressed.connect(func(): router.show_deck_select())
 	buttons.add_child(again)
 	var menu := UIKit.button("MAIN MENU", "", Vector2(240, 60))
 	menu.pressed.connect(func(): router.show_title())

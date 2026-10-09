@@ -118,8 +118,11 @@ func _swap_to(screen: Control, show_hud: bool, mood: String) -> void:
 func show_title() -> void:
 	_swap_to(TitleScreen.new(), false, "title")
 
-func start_run() -> void:
-	RunState.new_run()
+func show_deck_select() -> void:
+	_swap_to(DeckSelectScreen.new(), false, "title")
+
+func start_run(deck_id: String = "classic") -> void:
+	RunState.new_run(deck_id)
 	show_map()
 
 func show_map() -> void:
@@ -192,9 +195,10 @@ func reward_done(params: Dictionary) -> void:
 	show_map()
 
 func show_end(victory: bool) -> void:
-	RunState.end_run(victory)
+	var unlocked := RunState.end_run(victory)
 	var screen := EndScreen.new()
 	screen.victory = victory
+	screen.unlocked_deck = unlocked
 	_swap_to(screen, false, "title" if victory else "boss")
 
 # ---------- Overlays ----------

@@ -12,6 +12,10 @@ const PLAYER := 0
 const ENEMY := 1
 # Bust: holding this many cards loses the battle on the spot. Keeps wacky-card chaos from running forever.
 const BUST_LIMIT := 25
+# Time limit: after this many turns in total, the smaller hand wins. Stops stalemates where both sides
+# keep feeding each other draw cards forever (e.g. two-colour decks that never match each other).
+const TURN_LIMIT := 200
+const TURN_WARNING := 180
 
 var hands: Array = [[], []]
 var draw_piles: Array = [[], []]
@@ -287,6 +291,12 @@ func play(side: int, card: CardData, chosen: int = -1) -> Dictionary:
 func penalize(side: int, amount: int) -> Array:
 	return draw_many(side, amount)
 
+func total_turns() -> int:
+	return turn_number[PLAYER] + turn_number[ENEMY]
+
+func time_up() -> bool:
+	return total_turns() >= TURN_LIMIT
+
 func note_stuck() -> void:
 	stuck_in_row += 1
 
@@ -311,7 +321,7 @@ func winner() -> int:
 		return ENEMY
 	if hands[ENEMY].size() >= BUST_LIMIT:
 		return PLAYER
-	if stuck_in_row >= 4:
+	if time_up() or stuck_in_row >= 4:
 		return PLAYER if hands[PLAYER].size() < hands[ENEMY].size() else ENEMY
 	return -1
 

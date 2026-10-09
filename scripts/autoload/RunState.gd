@@ -24,7 +24,8 @@ var current_node := -1
 var visited: Array[int] = []
 var removal_cost := 50
 var stats := {}
-var meta := {"runs": 0, "wins": 0, "best_floor": 0}
+var meta := {"runs": 0, "wins": 0, "best_floor": 0, "unlocked_decks": ["classic"], "deck_wins": {}}
+var deck_id := "classic"
 
 # Settings (saved with meta)
 var fast_mode := false
@@ -34,14 +35,18 @@ func _ready() -> void:
 	load_meta()
 
 # new_run
-# DESCRIPTION: Resets everything for a fresh run.
-func new_run() -> void:
+# DESCRIPTION: Resets everything for a fresh run using the chosen starting deck and its perks.
+func new_run(p_deck_id: String = "classic") -> void:
 	in_run = true
-	hp = START_HP
-	max_hp = START_HP
-	gold = START_GOLD
-	deck = CardFactory.starter_deck()
+	deck_id = p_deck_id if is_deck_unlocked(p_deck_id) else "classic"
+	var def := StarterDecks.get_def(deck_id)
+	max_hp = START_HP + int(def.hp)
+	hp = max_hp
+	gold = START_GOLD + int(def.gold)
+	deck = StarterDecks.build(deck_id)
 	charms = []
+	for id in def.charms:
+		charms.append(id)
 	act = 1
 	removal_cost = 50
 	stats = {"battles_won": 0, "elites": 0, "bosses": 0, "cards_played": 0, "damage_taken": 0, "gold_earned": 0, "floor": 0}
@@ -144,11 +149,23 @@ func is_dead() -> bool:
 func price_multiplier() -> float:
 	return 0.75 if has_charm("deep_pockets") else 1.0
 
-func end_run(victory: bool) -> void:
+# end_run
+# DESCRIPTION: Records the result. Winning with a deck unlocks the next one; returns its id ("" if none).
+func end_run(victory: bool) -> String:
 	in_run = false
+	var unlocked := ""
 	if victory:
 		meta.wins += 1
+		meta.deck_wins[deck_id] = int(meta.deck_wins.get(deck_id, 0)) + 1
+		var next := StarterDecks.next_after(deck_id)
+		if next != "" and not is_deck_unlocked(next):
+			meta.unlocked_decks.append(next)
+			unlocked = next
 	save_meta()
+	return unlocked
+
+func is_deck_unlocked(id: String) -> bool:
+	return meta.unlocked_decks.has(id)
 
 func save_meta() -> void:
 	var cfg := ConfigFile.new()
