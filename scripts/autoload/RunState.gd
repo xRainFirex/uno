@@ -7,7 +7,8 @@ extends Node
 
 signal changed
 
-const SAVE_PATH := "user://dos_meta.cfg"
+const SAVE_PATH := "user://quietus_meta.cfg"
+const LEGACY_SAVE_PATH := "user://dos_meta.cfg"  # read when no Quietus save exists yet
 const ACTS := 3
 const START_HP := 50
 const START_GOLD := 40
@@ -190,7 +191,7 @@ func save_meta() -> void:
 
 func load_meta() -> void:
 	var cfg := ConfigFile.new()
-	if cfg.load(SAVE_PATH) != OK:
+	if cfg.load(SAVE_PATH) != OK and cfg.load(LEGACY_SAVE_PATH) != OK:
 		return
 	for k in meta:
 		meta[k] = cfg.get_value("meta", k, meta[k])

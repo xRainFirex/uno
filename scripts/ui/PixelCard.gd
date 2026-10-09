@@ -34,6 +34,11 @@ const MINI := {
 	"swap": [".#...", "###.#", ".#.#.", "#.###", "...#."],
 }
 const SUIT_MINI := ["ember", "tide", "moss", "dusk"]
+# 9x11 card-back letter.
+const SIGIL_Q := [
+	"..#####..", ".##...##.", "##.....##", "##.....##", "##.....##", "##.....##",
+	"##..##.##", ".##..###.", "..######.", "......##.", ".......##",
+]
 
 static var _cache := {}
 
@@ -250,4 +255,15 @@ static func _draw_back(pc: PixelCanvas) -> void:
 			var lattice := (x + y) % 6 == 0 or (x - y + 60) % 6 == 0
 			pc.plot(x, y, BACK_BODY.lightened(0.12) if lattice else BACK_BODY)
 	_plate(pc, BACK_BODY.darkened(0.3))
-	_stamp_icon(pc, "sigil", Vector2i(13, 19), 16, BACK_GOLD)
+	# The Quietus sigil: a gold Q with a hard shadow and ink outline, flanked by small diamonds.
+	var q := PixelCanvas.new(13, 15)
+	for y in SIGIL_Q.size():
+		for x in SIGIL_Q[y].length():
+			if SIGIL_Q[y][x] == "#":
+				q.plot(x + 3, y + 3, BACK_GOLD.darkened(0.55))
+				q.plot(x + 2, y + 2, BACK_GOLD.lightened(0.2) if y < 3 else BACK_GOLD)
+	q.outline(INK)
+	_blit(pc, q, Vector2i(7, 11), false)
+	for d in [Vector2i(12, 10), Vector2i(12, 26)]:
+		pc.plot(d.x, d.y, BACK_GOLD)
+		pc.plot(d.x + 1, d.y, BACK_GOLD)

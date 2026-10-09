@@ -125,10 +125,13 @@ func show_deck_select() -> void:
 
 func start_run(deck_id: String = "classic") -> void:
 	RunState.new_run(deck_id)
-	show_map()
+	await show_map()
+	# First run ever: tell the story before the first step.
+	if RunState.meta.runs == 1:
+		_overlay.add_child(Story.panel("TAKE A SEAT", func(): pass))
 
 func show_map() -> void:
-	_swap_to(MapScreen.new(), true, "map")
+	await _swap_to(MapScreen.new(), true, "map")
 
 # enter_node
 # DESCRIPTION: Called by the map when the player picks a node.
@@ -164,6 +167,8 @@ func battle_won(enemy: Dictionary, gold: int) -> void:
 		"boss":
 			RunState.stats.bosses += 1
 			params.title = "BOSS DEFEATED"
+			var owed: int = Story.markers_owed()
+			params.subtitle = "%s tears up one of your markers. %s still owed." % [enemy.name, Story.markers_text(owed).to_lower()]
 			params.card_bonus = 0.35
 			params.charms = Charms.random_unowned(RunState.charms, 3)
 			params.boss = true

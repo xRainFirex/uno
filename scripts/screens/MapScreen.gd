@@ -76,7 +76,7 @@ func _ready() -> void:
 	var name_label := UIKit.title(Enemies.ACT_NAMES[RunState.act - 1].to_upper(), 46)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	side.add_child(name_label)
-	side.add_child(UIKit.label("Choose your path. The boss awaits at the top.", 19, UIKit.TEXT_MUTED))
+	side.add_child(UIKit.label("Choose your path. The boss at the top holds one of your markers.", 19, UIKit.TEXT_MUTED))
 	side.add_child(UIKit.label("Scroll to see the whole route.", 17, UIKit.TEXT_MUTED))
 	side.add_child(UIKit.spacer(0, 30))
 	for t in ["battle", "elite", "event", "shop", "rest", "treasure", "boss"]:

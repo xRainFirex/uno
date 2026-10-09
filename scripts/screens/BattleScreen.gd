@@ -1,7 +1,7 @@
 # ==========================================
 # FILE: BattleScreen.gd
 # DESCRIPTION: The card table. Drives the turn loop over BattleState, animates every card movement,
-#              and handles DOS! calls, catching, colour picking and the end-of-battle result.
+#              and handles QUIET! calls, catching, colour picking and the end-of-battle result.
 # VERSION: v0.100
 # ==========================================
 class_name BattleScreen
@@ -33,7 +33,7 @@ var _log: RichTextLabel
 var _avatar: Avatar
 var _enemy_count_label: Label
 var _hand_count_label: Label
-var _dos_button: Button
+var _quiet_button: Button
 var _pass_button: Button
 var _catch_button: Button
 var _color_modal: Control
@@ -41,7 +41,7 @@ var _color_modal: Control
 var _awaiting := false
 var _busy := false
 var _drawn_card: CardData = null
-var _dos_called := false
+var _quiet_called := false
 var _modal := false
 var _finished := false
 var _catch_open := false
@@ -177,13 +177,13 @@ func _build_ui() -> void:
 	lcol.add_child(_log)
 
 	# Action buttons
-	_dos_button = Button.new()
-	_dos_button.text = "DOS!"
-	_dos_button.focus_mode = Control.FOCUS_NONE
-	_dos_button.custom_minimum_size = Vector2(150, 150)
-	_dos_button.pivot_offset = Vector2(75, 75)
-	_dos_button.tooltip_text = "Call DOS! before playing your second-to-last card (D)"
-	_dos_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_quiet_button = Button.new()
+	_quiet_button.text = "QUIET!"
+	_quiet_button.focus_mode = Control.FOCUS_NONE
+	_quiet_button.custom_minimum_size = Vector2(150, 150)
+	_quiet_button.pivot_offset = Vector2(75, 75)
+	_quiet_button.tooltip_text = "Call QUIET! before playing your second-to-last card (Q)"
+	_quiet_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for st in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var col := UIKit.DANGER
 		if st == "hover":
@@ -193,16 +193,16 @@ func _build_ui() -> void:
 		elif st == "disabled":
 			col = Color(0.25, 0.12, 0.13)
 		var sb := UIKit.stylebox(col, 0, 6, UIKit.GOLD if st != "disabled" else Color(0.35, 0.3, 0.2), 12 if st != "disabled" else 0)
-		_dos_button.add_theme_stylebox_override(st, sb)
-	_dos_button.add_theme_font_override("font", UIKit.font_display())
-	_dos_button.add_theme_font_size_override("font_size", 40)
-	_dos_button.add_theme_color_override("font_color", UIKit.GOLD)
-	_dos_button.add_theme_color_override("font_hover_color", Color(1, 0.9, 0.5))
-	_dos_button.add_theme_color_override("font_disabled_color", Color(0.5, 0.4, 0.3))
-	_dos_button.add_theme_color_override("font_outline_color", Color(0.2, 0.02, 0.03))
-	_dos_button.add_theme_constant_override("outline_size", 10)
-	_dos_button.pressed.connect(_on_dos_pressed)
-	add_child(_dos_button)
+		_quiet_button.add_theme_stylebox_override(st, sb)
+	_quiet_button.add_theme_font_override("font", UIKit.font_display())
+	_quiet_button.add_theme_font_size_override("font_size", 32)
+	_quiet_button.add_theme_color_override("font_color", UIKit.GOLD)
+	_quiet_button.add_theme_color_override("font_hover_color", Color(1, 0.9, 0.5))
+	_quiet_button.add_theme_color_override("font_disabled_color", Color(0.5, 0.4, 0.3))
+	_quiet_button.add_theme_color_override("font_outline_color", Color(0.2, 0.02, 0.03))
+	_quiet_button.add_theme_constant_override("outline_size", 10)
+	_quiet_button.pressed.connect(_on_quiet_pressed)
+	add_child(_quiet_button)
 
 	_pass_button = UIKit.button("PASS", "", Vector2(150, 0))
 	_pass_button.tooltip_text = "Keep the drawn card and end your turn (Enter)"
@@ -289,7 +289,7 @@ func _layout_all() -> void:
 	pill.position = Vector2(c.x - pill.size.x / 2.0, c.y - 200.0)
 	var log_panel := get_node("LogPanel") as Control
 	log_panel.position = Vector2(size.x - 396, Hud.HEIGHT + 24)
-	_dos_button.position = Vector2(size.x - 250, size.y - 390)
+	_quiet_button.position = Vector2(size.x - 250, size.y - 390)
 	_pass_button.position = Vector2(size.x - 250, size.y - 210)
 	_catch_button.position = Vector2(c.x + 260, _hand_y(E) + 30)
 	_hand_count_label.position = Vector2(40, size.y - 64)
@@ -435,8 +435,8 @@ func _refresh_controls() -> void:
 		v.dimmed = my_turn and not ok
 		any_playable = any_playable or ok
 	_deck_views[P].playable = my_turn and _drawn_card == null and not any_playable and state.can_draw(P)
-	var dos_ready: bool = my_turn and state.hands[P].size() == 2 and any_playable and not _dos_called
-	_dos_button.disabled = not dos_ready
+	var quiet_ready: bool = my_turn and state.hands[P].size() == 2 and any_playable and not _quiet_called
+	_quiet_button.disabled = not quiet_ready
 	_pass_button.visible = my_turn and _drawn_card != null
 
 # _count_text / _count_color
@@ -500,11 +500,11 @@ func _shake(strength: float = 12.0) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	if not _dos_button.disabled:
+	if not _quiet_button.disabled:
 		var s := 1.0 + 0.06 * sin(_time * 7.0)
-		_dos_button.scale = Vector2(s, s)
+		_quiet_button.scale = Vector2(s, s)
 	else:
-		_dos_button.scale = Vector2.ONE
+		_quiet_button.scale = Vector2.ONE
 	if _catch_open:
 		var s2 := 1.0 + 0.08 * sin(_time * 12.0)
 		_catch_button.pivot_offset = _catch_button.size / 2.0
@@ -555,9 +555,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_SPACE:
 				_on_deck_clicked()
-			KEY_D:
-				if not _dos_button.disabled:
-					_on_dos_pressed()
+			KEY_Q:
+				if not _quiet_button.disabled:
+					_on_quiet_pressed()
 			KEY_ENTER, KEY_KP_ENTER:
 				if _pass_button.visible:
 					_on_pass_pressed()
@@ -613,13 +613,13 @@ func _on_pass_pressed() -> void:
 	_log_line("You passed.")
 	_player_done.emit()
 
-func _on_dos_pressed() -> void:
-	if _dos_button.disabled:
+func _on_quiet_pressed() -> void:
+	if _quiet_button.disabled:
 		return
-	_dos_called = true
+	_quiet_called = true
 	Sfx.play("call")
-	_float_text("DOS!", Vector2(size.x - 175, size.y - 430), UIKit.GOLD, 56)
-	_log_line("[color=#f5c542][b]You called DOS![/b][/color]")
+	_float_text("QUIET!", Vector2(size.x - 175, size.y - 430), UIKit.GOLD, 56)
+	_log_line("[color=#f5c542][b]You called QUIET![/b][/color]")
 	_refresh_controls()
 
 # _pick_color
@@ -725,7 +725,7 @@ func _loop() -> void:
 
 func _player_turn() -> void:
 	_drawn_card = null
-	_dos_called = RunState.has_charm("megaphone")
+	_quiet_called = RunState.has_charm("megaphone")
 	if state.playable_cards(P).is_empty() and not state.can_draw(P):
 		_set_status("No moves - your turn passes", UIKit.TEXT_MUTED)
 		state.note_stuck()
@@ -824,22 +824,22 @@ func _resolve_play(side: int, card: CardData, color: int) -> void:
 	if not res.draws.is_empty() or res.swapped or not res.discarded.is_empty() or not res.gifted.is_empty():
 		await _wait(0.55)
 	if state.hands[side].size() == 1 and not res.swapped:
-		await _dos_check(side)
+		await _quiet_check(side)
 	await _wait(0.25)
 
-# _dos_check
-# DESCRIPTION: DOS! calling and catching for both sides.
-func _dos_check(side: int) -> void:
+# _quiet_check
+# DESCRIPTION: QUIET! calling and catching for both sides.
+func _quiet_check(side: int) -> void:
 	if side == P:
-		if _dos_called:
+		if _quiet_called:
 			if RunState.has_charm("megaphone"):
-				_float_text("DOS!", Vector2(size.x / 2.0, size.y - 330), UIKit.GOLD, 60)
+				_float_text("QUIET!", Vector2(size.x / 2.0, size.y - 330), UIKit.GOLD, 60)
 				Sfx.play("call")
 			return
 		await _wait(0.35)
 		if randf() < float(enemy.catch):
 			_float_text("CAUGHT!  +2", Vector2(size.x / 2.0, size.y - 330), UIKit.DANGER, 60)
-			_log_line("[color=#e5484d]%s caught you without calling DOS! Draw 2.[/color]" % enemy.name)
+			_log_line("[color=#e5484d]%s caught you without calling QUIET! Draw 2.[/color]" % enemy.name)
 			state.penalize(P, 2)
 			Sfx.play("hurt")
 			_shake(14.0)
@@ -848,12 +848,12 @@ func _dos_check(side: int) -> void:
 		else:
 			_float_text("Phew... nobody noticed", Vector2(size.x / 2.0, size.y - 330), UIKit.TEXT_MUTED, 30)
 	else:
-		if randf() < float(enemy.dos_call):
-			_float_text("DOS!", Vector2(size.x / 2.0, _hand_y(E) + 150), UIKit.DANGER, 60)
-			_log_line("%s calls [b]DOS![/b]" % enemy.name)
+		if randf() < float(enemy.quiet_call):
+			_float_text("QUIET!", Vector2(size.x / 2.0, _hand_y(E) + 150), UIKit.DANGER, 60)
+			_log_line("%s calls [b]QUIET![/b]" % enemy.name)
 			Sfx.play("call", 0.8)
 			return
-		_log_line("%s forgot to call DOS!..." % enemy.name)
+		_log_line("%s forgot to call QUIET!..." % enemy.name)
 		var caught: bool = await _catch_window(2.4)
 		if caught:
 			_float_text("CAUGHT!  +2", Vector2(size.x / 2.0, _hand_y(E) + 150), UIKit.GOLD, 60)

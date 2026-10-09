@@ -1,6 +1,12 @@
-# DOS: A Card Roguelike
+# Quietus: A Card Roguelike
+
+*...a debt paid in full.*
 
 A deck-building roguelike card game with shedding-style rules (match colour or number, empty your hand to win), made in **Godot 4.5**. Every card, icon, portrait and sound effect is generated in code. The only bundled assets are two open-licensed pixel fonts.
+
+## The story
+
+One bad night at the Dealer's table cost you everything. Your debt is written on three markers, each held by one of the Dealer's keepers: the bosses of the Back Alley, the Velvet Casino and the Hall of Quietus. Beat a boss to win back its marker; win all three and you earn your *quietus*, the old word for a debt paid in full. The HUD shows how many markers are still owed. The prologue plays on your first run and can be re-read from **The Story** on the title screen.
 
 ## Art style
 
@@ -23,7 +29,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 - **Map.** Each of the three acts is a 13-floor branching map that scrolls, with the boss at the top. Most floors are battles, events and elites (red skulls, tougher opponents that drop a charm). Floor 9 is mostly elites. Specials are rare and spaced out, so on any route you'll find at most 2 shops, at most 2 rest sites (one is always the campfire before the boss) and exactly 1 treasure, and never two in a row.
 - **Battles.** Each battle is a one-on-one card duel. Match the top card by colour, number or symbol. You draw from **your own deck**, which you grow and refine over the run, and the opponent draws from theirs.
 - **Losing hurts.** If the opponent empties their hand first, you take damage for each card left in your hand and must replay the same battle. You can't move on until you win. At 0 HP the run is over.
-- **DOS!** With two cards left, press **DOS!** (or `D`) before playing, or you may get caught and draw 2. If the opponent forgets to call it, press **CATCH!** in time to make them draw 2.
+- **QUIET!** With two cards left, press **QUIET!** (or `Q`) before playing, or you may get caught and draw 2. If the opponent forgets to call it, press **CATCH!** in time to make them draw 2.
 
 ### Controls
 
@@ -31,7 +37,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 | --- | --- | --- |
 | Play a card | Click it | |
 | Draw | Click your deck | `Space` |
-| Call DOS! | DOS! button | `D` |
+| Call QUIET! | QUIET! button | `Q` |
 | Pass after drawing | PASS button | `Enter` |
 | Catch the opponent | CATCH! button | `C` |
 | Pause | MENU button | `Esc` |
@@ -80,7 +86,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
   | The Ringmaster (elite) | III | Every trick card, with Jackpot and Generous |
   | The Jester King (boss) | III | Alternate final boss: every trick card, with Frostbite and Jackpot |
 - **12 events**, half of them built around trick cards (the Two-Tone Painter, the Frozen Lake, Secret Santa, the Double-or-Nothing Table, the Clockmaker and the Jester's Game). There is also a shop with card removal, and campfires that offer rest or an enchantment.
-- Lifetime stats and settings (sound on/off, fast mode) are saved to `user://dos_meta.cfg`.
+- Lifetime stats and settings (sound on/off, fast mode) are saved to `user://quietus_meta.cfg`.
 
 ## Project layout
 

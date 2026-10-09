@@ -23,8 +23,9 @@ func _ready() -> void:
 	var icon := Glyph.new("crown" if victory else "skull", UIKit.GOLD if victory else UIKit.DANGER, 110)
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(icon)
-	col.add_child(UIKit.title("YOU BEAT THE HOUSE" if victory else "RUN OVER", 72, UIKit.GOLD if victory else UIKit.DANGER))
-	var flavour := "The Dealer folds. The House of DOS is yours." if victory else "Your luck ran out on floor %d." % RunState.floor_number()
+	col.add_child(UIKit.title("DEBT PAID IN FULL" if victory else "THE HOUSE COLLECTS", 56, UIKit.GOLD if victory else UIKit.DANGER))
+	var owed: int = Story.markers_owed()
+	var flavour := "The last marker burns. You walk out into the dawn, free at last." if victory else "You fell on floor %d with %s still owed." % [RunState.floor_number(), Story.markers_text(owed).to_lower()]
 	col.add_child(UIKit.label(flavour, 22, UIKit.TEXT_MUTED, false, HORIZONTAL_ALIGNMENT_CENTER))
 	col.add_child(UIKit.label("Deck: %s" % StarterDecks.get_def(RunState.deck_id).name, 18, UIKit.TEXT_MUTED, true, HORIZONTAL_ALIGNMENT_CENTER))
 	if unlocked_deck != "":

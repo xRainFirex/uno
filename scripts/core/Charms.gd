@@ -17,7 +17,7 @@ const DATA := {
 	"mirror_shard": {"name": "Mirror Shard", "desc": "Your Reverse cards also make the opponent draw 1.", "icon": "reverse", "color": Color(0.45, 0.8, 0.95), "rarity": 0},
 	"pickpocket": {"name": "Pickpocket", "desc": "Gain 1 gold for every card you play.", "icon": "text:+$", "color": Color(0.8, 0.6, 0.3), "rarity": 0},
 	"thick_skin": {"name": "Thick Skin", "desc": "Take 30% less damage from lost battles.", "icon": "shield", "color": Color(0.55, 0.65, 0.75), "rarity": 0},
-	"megaphone": {"name": "Megaphone", "desc": "DOS! is called automatically for you.", "icon": "text:DOS", "color": Color(0.95, 0.5, 0.2), "rarity": 0},
+	"megaphone": {"name": "Megaphone", "desc": "QUIET! is called automatically for you.", "icon": "text:Q!", "color": Color(0.95, 0.5, 0.2), "rarity": 0},
 	"seer": {"name": "Seer's Eye", "desc": "The top card of your draw pile is always revealed.", "icon": "eye", "color": Color(0.4, 0.6, 0.95), "rarity": 1},
 	"spyglass": {"name": "Spyglass", "desc": "One card in the opponent's hand is always revealed.", "icon": "search", "color": Color(0.7, 0.75, 0.4), "rarity": 0},
 	"rubber_gloves": {"name": "Rubber Gloves", "desc": "The first draw penalty against you each battle is reduced by 2.", "icon": "text:-2", "color": Color(0.95, 0.85, 0.3), "rarity": 0},

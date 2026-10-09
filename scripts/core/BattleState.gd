@@ -287,7 +287,7 @@ func play(side: int, card: CardData, chosen: int = -1) -> Dictionary:
 	return res
 
 # penalize
-# DESCRIPTION: Forced draws outside of card effects (e.g. getting caught without calling DOS).
+# DESCRIPTION: Forced draws outside of card effects (e.g. getting caught without calling QUIET!).
 func penalize(side: int, amount: int) -> Array:
 	return draw_many(side, amount)
 

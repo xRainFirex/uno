@@ -15,6 +15,7 @@ var _hp_bar: ProgressBar
 var _hp_label: Label
 var _gold_label: Label
 var _floor_label: Label
+var _debt_label: Label
 var _charm_box: HBoxContainer
 var _deck_button: Button
 var _shown_hp := -1.0
@@ -67,6 +68,14 @@ func _ready() -> void:
 	_floor_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_floor_label)
 
+	row.add_child(UIKit.spacer(18))
+	row.add_child(_centered_glyph("text:Q", UIKit.DANGER.lightened(0.2)))
+	_debt_label = UIKit.label("", 20, UIKit.DANGER.lightened(0.35), true)
+	_debt_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_debt_label.tooltip_text = "Markers the House still holds. Beat an act's boss to win one back."
+	_debt_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	row.add_child(_debt_label)
+
 	row.add_child(UIKit.expand_spacer())
 	_charm_box = UIKit.hbox(6)
 	_charm_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -111,6 +120,7 @@ func refresh() -> void:
 	_gold_label.text = str(RunState.gold)
 	var row := 0 if RunState.current_node < 0 else int(RunState.map_nodes[RunState.current_node].row) + 1
 	_floor_label.text = "ACT %s  ·  FLOOR %d / %d" % [["I", "II", "III"][clampi(RunState.act - 1, 0, 2)], row, MapGen.ROWS]
+	_debt_label.text = "OWED  %s" % Story.markers_text(Story.markers_owed())
 	_deck_button.text = "DECK  %d" % RunState.deck.size()
 	for c in _charm_box.get_children():
 		c.queue_free()

@@ -1,6 +1,6 @@
 # ==========================================
 # FILE: CardData.gd
-# DESCRIPTION: Resource describing a single DOS card: colour, type, value and enchantment.
+# DESCRIPTION: Resource describing a single Quietus card: colour, type, value and enchantment.
 # VERSION: v0.100
 # ==========================================
 class_name CardData
