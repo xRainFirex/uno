@@ -110,7 +110,7 @@ func refresh() -> void:
 	_shown_gold = RunState.gold
 	_gold_label.text = str(RunState.gold)
 	var row := 0 if RunState.current_node < 0 else int(RunState.map_nodes[RunState.current_node].row) + 1
-	_floor_label.text = "ACT %s  ·  FLOOR %d" % [["I", "II", "III"][clampi(RunState.act - 1, 0, 2)], row]
+	_floor_label.text = "ACT %s  ·  FLOOR %d / %d" % [["I", "II", "III"][clampi(RunState.act - 1, 0, 2)], row, MapGen.ROWS]
 	_deck_button.text = "DECK  %d" % RunState.deck.size()
 	for c in _charm_box.get_children():
 		c.queue_free()

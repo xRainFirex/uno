@@ -6,9 +6,15 @@
 class_name MapGen
 extends RefCounted
 
-const ROWS := 7          # rows 0..5 are regular floors, row 6 is the boss
+const ROWS := 13         # rows 0..11 are regular floors, row 12 is the boss
 const LANES := 4
-const TREASURE_ROW := 3
+# Special rows are spaced apart so shops, rests and treasure never come back-to-back on any route:
+# each route meets at most 2 shops, 2 rests and exactly 1 treasure.
+const SHOP_ROW := 3
+const TREASURE_ROW := 6
+const ELITE_ROW := 8
+const CAMP_ROW := 9
+const REST_ROW := 11
 
 static func generate(act: int) -> Array:
 	var nodes: Array = []
@@ -63,16 +69,24 @@ static func _link(node: Dictionary, target: int) -> void:
 		node.next.append(target)
 
 static func _roll_type(row: int, _act: int) -> String:
-	if row == 0:
-		return "battle"
-	if row == TREASURE_ROW:
-		return "treasure"
-	if row == ROWS - 2:
-		return ["rest", "rest", "rest", "shop", "event"].pick_random()
-	var weights := {"battle": 45, "event": 22, "shop": 12, "elite": 0, "rest": 0}
-	if row >= 2:
-		weights.elite = 16
-		weights.rest = 8
+	match row:
+		0:
+			return "battle"
+		SHOP_ROW:
+			return _weighted({"shop": 45, "event": 25, "battle": 30})
+		TREASURE_ROW:
+			return "treasure"
+		ELITE_ROW:
+			return _weighted({"elite": 65, "battle": 35})
+		CAMP_ROW:
+			return _weighted({"rest": 45, "shop": 25, "battle": 30})
+		REST_ROW:
+			return "rest"
+	if row == 1:
+		return _weighted({"battle": 75, "event": 25})
+	return _weighted({"battle": 55, "event": 25, "elite": 10 if row == 2 else 20})
+
+static func _weighted(weights: Dictionary) -> String:
 	var total := 0
 	for k in weights:
 		total += weights[k]
@@ -81,4 +95,4 @@ static func _roll_type(row: int, _act: int) -> String:
 		roll -= weights[k]
 		if roll <= 0:
 			return k
-	return "battle"
+	return weights.keys()[0]

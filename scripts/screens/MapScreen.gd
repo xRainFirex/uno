@@ -27,7 +27,13 @@ const DESCRIPTIONS := {
 }
 
 var router: Node
+const ROW_GAP := 118.0
+const MAP_PAD_TOP := 120.0
+const MAP_PAD_BOTTOM := 90.0
+
 var _canvas: Control
+var _scroll: ScrollContainer
+var _content: Control
 var _nodes: Dictionary = {}
 var _available: Array = []
 var _time := 0.0
@@ -38,18 +44,28 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_available = RunState.available_nodes()
 
+	# The map is taller than the screen, so it lives in a vertical scroll area below the HUD.
+	_scroll = ScrollContainer.new()
+	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scroll.offset_top = Hud.HEIGHT
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(_scroll)
+	_content = Control.new()
+	_content.mouse_filter = Control.MOUSE_FILTER_PASS
+	_scroll.add_child(_content)
+
 	_canvas = Control.new()
 	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_draw_paths)
-	add_child(_canvas)
+	_content.add_child(_canvas)
 
 	for n in RunState.map_nodes:
 		var view := MapNodeView.new(n)
 		view.state = _state_of(n)
-		view.tooltip_text = DESCRIPTIONS[n.type]
+		view.tooltip_text = "Floor %d  ·  %s" % [int(n.row) + 1, DESCRIPTIONS[n.type]]
 		view.pressed.connect(_on_node_pressed)
-		add_child(view)
+		_content.add_child(view)
 		_nodes[n.id] = view
 
 	# Act banner and legend
@@ -61,6 +77,7 @@ func _ready() -> void:
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	side.add_child(name_label)
 	side.add_child(UIKit.label("Choose your path. The boss awaits at the top.", 19, UIKit.TEXT_MUTED))
+	side.add_child(UIKit.label("Scroll to see the whole route.", 17, UIKit.TEXT_MUTED))
 	side.add_child(UIKit.spacer(0, 30))
 	for t in ["battle", "elite", "event", "shop", "rest", "treasure", "boss"]:
 		var row := UIKit.hbox(12)
@@ -68,8 +85,12 @@ func _ready() -> void:
 		row.add_child(UIKit.label(NODE_STYLE[t].label, 20, UIKit.TEXT))
 		side.add_child(row)
 
+	side.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for c in side.get_children():
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	resized.connect(_layout)
 	_layout.call_deferred()
+	_scroll_to_current.call_deferred()
 
 func _state_of(n: Dictionary) -> String:
 	if n.id == RunState.current_node:
@@ -80,14 +101,30 @@ func _state_of(n: Dictionary) -> String:
 		return "available"
 	return "locked"
 
+func _content_height() -> float:
+	return MAP_PAD_TOP + ROW_GAP * (MapGen.ROWS - 1) + MAP_PAD_BOTTOM
+
+# _node_pos
+# DESCRIPTION: Node centre in scroll-content coordinates. Row 0 sits at the bottom, the boss at the top.
 func _node_pos(n: Dictionary) -> Vector2:
-	var top := Hud.HEIGHT + 110.0
-	var bottom := size.y - 90.0
-	var gap := (bottom - top) / float(MapGen.ROWS - 1)
+	var bottom := _content_height() - MAP_PAD_BOTTOM
 	var cx := size.x * 0.56
-	return Vector2(cx + (float(n.lane) - 1.5) * 220.0 + n.jx, bottom - n.row * gap + n.jy)
+	return Vector2(cx + (float(n.lane) - 1.5) * 220.0 + n.jx, bottom - n.row * ROW_GAP + n.jy)
+
+# _scroll_to_current
+# DESCRIPTION: Starts the view on the rows you can pick from, then eases there if needed.
+func _scroll_to_current() -> void:
+	var row := 0
+	if not _available.is_empty():
+		row = int(RunState.map_nodes[_available[0]].row)
+	var target_y := _content_height() - MAP_PAD_BOTTOM - row * ROW_GAP
+	var scroll_to := clampf(target_y - _scroll.size.y * 0.72, 0.0, maxf(0.0, _content_height() - _scroll.size.y))
+	# Begin one row lower and glide up so the player sees where they came from.
+	_scroll.scroll_vertical = int(minf(scroll_to + ROW_GAP, maxf(0.0, _content_height() - _scroll.size.y)))
+	create_tween().tween_property(_scroll, "scroll_vertical", int(scroll_to), 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func _layout() -> void:
+	_content.custom_minimum_size = Vector2(size.x - 20.0, _content_height())
 	for id in _nodes:
 		var view: MapNodeView = _nodes[id]
 		view.position = _node_pos(RunState.map_nodes[id]) - view.size / 2.0
@@ -157,7 +194,7 @@ class MapNodeView extends Control:
 
 	func _process(delta: float) -> void:
 		_t += delta
-		if state == "available" or state == "current" or _hover:
+		if state == "available" or state == "current" or _hover or node.type == "elite" or node.type == "boss":
 			queue_redraw()
 
 	func _draw() -> void:
@@ -181,6 +218,10 @@ class MapNodeView extends Control:
 				icon_col = Color(col, 0.45)
 			"available":
 				draw_circle(c, r * 1.25, Color(col, 0.12 + 0.08 * sin(_t * 4.0)))
+		if (node.type == "elite" or node.type == "boss") and state != "visited":
+			# Dangerous nodes pulse so you can see them coming from afar.
+			var pulse := 0.5 + 0.5 * sin(_t * 3.0)
+			draw_circle(c, r * (1.18 + 0.08 * pulse), Color(col, 0.10 + 0.12 * pulse))
 		draw_circle(c, r, bg)
 		draw_arc(c, r - 2.0, 0, TAU, 48, ring, 4.0 if state != "locked" else 2.5, true)
 		Glyph.paint(self, style.icon, c, r * 0.52, icon_col)

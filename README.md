@@ -8,7 +8,7 @@ Open `project.godot` in Godot 4.5 or newer and press **F5**. The project uses th
 
 ## How a run works
 
-- **Map.** Each of the three acts is a branching map. Every row offers a choice of battles, elites, events, shops, campfires and treasure, with a boss at the top.
+- **Map.** Each of the three acts is a 13-floor branching map that scrolls, with the boss at the top. Most floors are battles, events and elites (red skulls, tougher opponents that drop a charm). Floor 9 is mostly elites. Specials are rare and spaced out, so on any route you'll find at most 2 shops, at most 2 rest sites (one is always the campfire before the boss) and exactly 1 treasure, and never two in a row.
 - **Battles.** Each battle is a one-on-one card duel. Match the top card by colour, number or symbol. You draw from **your own deck**, which you grow and refine over the run, and the opponent draws from theirs.
 - **Losing hurts.** If the opponent empties their hand first, you take damage for each card left in your hand and must replay the same battle. You can't move on until you win. At 0 HP the run is over.
 - **DOS!** With two cards left, press **DOS!** (or `D`) before playing, or you may get caught and draw 2. If the opponent forgets to call it, press **CATCH!** in time to make them draw 2.

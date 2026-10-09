@@ -84,6 +84,10 @@ static func pick(act: int, kind: String) -> Dictionary:
 	var pool: Array = ROSTER[clampi(act, 1, 3)][kind]
 	var e: Dictionary = pool.pick_random().duplicate(true)
 	e["kind"] = kind
+	# Elites are a real step up: they always play smart and start with a smaller hand.
+	if kind == "elite":
+		e.style = "smart" if e.style == "random" else e.style
+		e.hand = mini(e.hand, 6)
 	if e.abilities.has("quick"):
 		e.hand -= 1
 	return e

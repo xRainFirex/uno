@@ -111,6 +111,34 @@ func _initialize() -> void:
 				if not reachable:
 					push_error("Unreachable map node")
 					failures += 1
+	# Route rules: on any path, at most 2 shops, at most 2 rests and exactly 1 treasure,
+	# and never two specials (shop/rest/treasure) back to back.
+	var specials := ["shop", "rest", "treasure"]
+	for i in 200:
+		var nodes := MapGen.generate(1)
+		var best := {}   # id -> {max counts along any path to here, min elites}
+		for n in nodes:
+			var counts := {"shop": 0, "rest": 0, "treasure": 0, "elite_min": 0}
+			var parents := nodes.filter(func(p): return p.next.has(n.id))
+			if not parents.is_empty():
+				counts = {"shop": 0, "rest": 0, "treasure": 0, "elite_min": 999}
+				for p in parents:
+					var pc: Dictionary = best[p.id]
+					for k in ["shop", "rest", "treasure"]:
+						counts[k] = maxi(counts[k], pc[k])
+					counts.elite_min = mini(counts.elite_min, pc.elite_min)
+					if specials.has(p.type) and specials.has(n.type):
+						push_error("Back-to-back specials: %s -> %s" % [p.type, n.type])
+						failures += 1
+			if counts.has(n.type):
+				counts[n.type] += 1
+			if n.type == "elite":
+				counts.elite_min += 1
+			best[n.id] = counts
+		var boss: Dictionary = best[nodes.back().id]
+		if boss.shop > 2 or boss.rest > 2 or boss.treasure != 1:
+			push_error("Route rule broken: %s" % boss)
+			failures += 1
 	print("Map check done, failures %d" % failures)
 	# Trickster's Pact generation: every rarity must produce a valid card.
 	for i in 300:
