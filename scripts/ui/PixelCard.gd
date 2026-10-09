@@ -175,16 +175,32 @@ static func _draw_face(pc: PixelCanvas, card: CardData) -> void:
 
 	_plate(pc, PARCHMENT)
 	var center := Vector2(12.5, 18.5)
-	var ink := col.darkened(0.35) if not (wild or card.is_dual()) else INK
+	# Text labels are drawn white-on-grey into a mask, then coloured: suit ink for normal cards, the
+	# four suit colours for wilds and a split for dual cards, always over a dark shadow.
+	var lab := PixelCanvas.new(W, H)
 	match card.type:
 		CardData.Type.NUMBER:
-			_text_shadowed(pc, str(card.value), center, 3, ink)
+			_text_shadowed(lab, str(card.value), center, 3, Color.WHITE)
 		CardData.Type.DRAW_TWO:
-			_combo(pc, "+", "2", ink)
+			_combo(lab, "+", "2", Color.WHITE)
 		CardData.Type.WILD_DRAW_FOUR:
-			_combo(pc, "+", "4", INK)
+			_combo(lab, "+", "4", Color.WHITE)
 		CardData.Type.DOUBLE_DOWN:
-			_combo(pc, "x", "2", ink)
+			_combo(lab, "x", "2", Color.WHITE)
+	for y in H:
+		for x in W:
+			var m := lab.get_px(x, y)
+			if m.a <= 0.0:
+				continue
+			var fill := col.darkened(0.35)
+			if wild:
+				fill = _suit_color(clampi((y - 11) * 4 / 15, 0, 3)).darkened(0.1)
+			elif card.is_dual() and float(x - 3) / (W - 7) + float(y - 3) / (H - 7) > 1.0:
+				fill = _suit_color(card.second_color).darkened(0.2)
+			elif card.is_dual():
+				fill = col.darkened(0.2)
+			pc.plot(x, y, fill if m.r > 0.9 else (INK if wild or card.is_dual() else fill.darkened(0.6)))
+	match card.type:
 		CardData.Type.SKIP:
 			_stamp_icon(pc, "pause", Vector2i(13, 19), 14, col)
 		CardData.Type.REVERSE:
